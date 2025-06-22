@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://takenotes.vercel.app"),
+  metadataBase: new URL("https://takenotesai.vercel.app"),
   title: "TakeNote – AI-Powered Note Taking App",
   description:
     "TakeNote is a modern, AI-powered note-taking application featuring real-time sync, markdown support, and intelligent organization. Capture, organize, and access your notes anywhere.",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: "TakeNote – AI-Powered Note Taking App",
     description:
       "A modern note-taking app with AI features, real-time sync, and markdown support.",
-    url: "https://takenotes.vercel.app",
+    url: "https://takenotesai.vercel.app",
     siteName: "TakeNotes",
     images: [
       {
