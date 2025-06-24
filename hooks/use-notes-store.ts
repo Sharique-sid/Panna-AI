@@ -63,9 +63,15 @@ export const useNotesStore = create<NotesStore>()(
         loadNotes: async () => {
           set({ isLoading: true, error: null });
           try {
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+            if (userError) throw userError;
+            const user = userData.user;
+            if (!user) throw new Error("User not authenticated");
+
             const { data, error } = await supabase
               .from("notes")
               .select("*")
+              .eq("user_id", user.id)
               .order("updated_at", { ascending: false });
 
             if (error) throw error;
