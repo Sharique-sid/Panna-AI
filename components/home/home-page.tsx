@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Github, Sparkles, ArrowRight, Moon, Sun } from "lucide-react";
+import { Sparkles, ArrowRight, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 
@@ -29,7 +29,7 @@ export function HomePage() {
             <div className="flex items-center justify-center w-10 h-10 rounded-xl gradient-purple-blue">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text">TakeNote</span>
+            <span className="text-xl font-bold gradient-text">Panna.ai</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -96,22 +96,6 @@ export function HomePage() {
                 />
               </Link>
             </Button>
-
-            <Button
-              variant="outline"
-              size="lg"
-              className="px-8 py-6 text-lg font-medium rounded-2xl border-2"
-              asChild
-            >
-              <a
-                href="https://github.com/hasnaintypes/take-notes"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Github className="mr-2 h-5 w-5" />
-                View on GitHub
-              </a>
-            </Button>
           </div>
 
           {/* Features */}
@@ -128,11 +112,11 @@ export function HomePage() {
 
             <div className="card-enhanced rounded-3xl p-8 text-center space-y-4">
               <div className="w-16 h-16 mx-auto rounded-2xl gradient-purple-blue flex items-center justify-center">
-                <Github className="h-8 w-8 text-white" />
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold">Open Source</h3>
+              <h3 className="text-xl font-semibold">Privacy First</h3>
               <p className="text-muted-foreground">
-                Transparent, community-driven development
+                Your notes are yours. Control what you share.
               </p>
             </div>
 
@@ -156,31 +140,12 @@ export function HomePage() {
             <div className="flex items-center justify-center w-8 h-8 rounded-lg gradient-purple-blue">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <span className="font-semibold gradient-text">TakeNote</span>
+            <span className="font-semibold gradient-text">Panna.ai</span>
           </div>
           <p className="text-muted-foreground">
             Built with ❤️ by the open source community
           </p>
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <a
-              href="https://github.com/hasnaintypes/take-notes"
-              className="hover:text-foreground transition-colors"
-            >
-              Contribute
-            </a>
-            <a
-              href="https://github.com/hasnaintypes/take-notes/issues"
-              className="hover:text-foreground transition-colors"
-            >
-              Report Issues
-            </a>
-            <a
-              href="https://github.com/hasnaintypes/take-notes/blob/main/LICENSE"
-              className="hover:text-foreground transition-colors"
-            >
-              License
-            </a>
-          </div>
+          
         </div>
       </footer>
     </div>

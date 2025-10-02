@@ -40,7 +40,7 @@ export function NotesList({
   isLoading = false,
   className,
 }: NotesListProps) {
-  const { toggleFavorite, deleteNote, duplicateNote } = useNotesStore();
+  const { toggleFavorite, deleteNote, duplicateNote, purgeNote } = useNotesStore();
   const [draggedNote, setDraggedNote] = useState<Note | null>(null);
 
   const handleToggleFavorite = (e: React.MouseEvent, noteId: string) => {
@@ -56,6 +56,11 @@ export function NotesList({
   const handleDuplicateNote = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation();
     duplicateNote(noteId);
+  };
+
+  const handlePurgeNote = (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation();
+    purgeNote(noteId);
   };
 
   const handleDragStart = (e: React.DragEvent, note: Note) => {
@@ -187,19 +192,31 @@ export function NotesList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => handleDuplicateNote(e, note.id)}
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => handleDeleteNote(e, note.id)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                        {!note.deletedAt && (
+                          <DropdownMenuItem
+                            onClick={(e) => handleDuplicateNote(e, note.id)}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                        )}
+                        {note.deletedAt ? (
+                          <DropdownMenuItem
+                            onClick={(e) => handlePurgeNote(e, note.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete permanently
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={(e) => handleDeleteNote(e, note.id)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

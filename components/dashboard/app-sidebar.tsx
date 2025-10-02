@@ -123,7 +123,7 @@ export function AppSidebar({
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            TakeNote
+            Panna.ai
           </span>
         </div>
 

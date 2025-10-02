@@ -29,6 +29,7 @@ interface NotesStore {
   createNote: () => Promise<void>;
   updateNote: (id: string, updates: Partial<Note>) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  purgeNote: (id: string) => Promise<void>;
   restoreNote: (id: string) => Promise<void>;
   duplicateNote: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
@@ -214,6 +215,26 @@ export const useNotesStore = create<NotesStore>()(
                   ? { ...note, deletedAt: new Date().toISOString() }
                   : note
               ),
+              selectedNote:
+                state.selectedNote?.id === id ? null : state.selectedNote,
+            }));
+          } catch (error: any) {
+            set({ error: error.message });
+          }
+        },
+
+        // Permanently delete a note (hard delete) – used from Trash
+        purgeNote: async (id) => {
+          try {
+            const { error } = await supabase
+              .from("notes")
+              .delete()
+              .eq("id", id);
+
+            if (error) throw error;
+
+            set((state) => ({
+              notes: state.notes.filter((note) => note.id !== id),
               selectedNote:
                 state.selectedNote?.id === id ? null : state.selectedNote,
             }));

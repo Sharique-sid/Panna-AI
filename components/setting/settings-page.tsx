@@ -557,7 +557,7 @@ export function SettingsPage({ user }: SettingsPageProps) {
               <CardHeader>
                 <CardTitle>Appearance & Editor</CardTitle>
                 <CardDescription>
-                  Customize how TakeNote looks and feels.
+                  Customize how Panna.ai looks and feels.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">

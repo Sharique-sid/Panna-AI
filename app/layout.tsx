@@ -8,16 +8,16 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://takenotesai.vercel.app"),
-  title: "TakeNote – AI-Powered Note Taking App",
+  metadataBase: new URL("https://panna.ai"),
+  title: "Panna.ai – AI-Powered Note Taking App",
   description:
-    "TakeNote is a modern, AI-powered note-taking application featuring real-time sync, markdown support, and intelligent organization. Capture, organize, and access your notes anywhere.",
+    "Panna.ai is a modern, AI-powered note-taking application featuring real-time sync, markdown support, and intelligent organization. Capture, organize, and access your notes anywhere.",
   keywords: [
     "AI note-taking",
     "real-time sync",
     "markdown notes",
     "productivity",
-    "TakeNote",
+    "Panna.ai",
     "Supabase",
     "Next.js",
     "typescript",
@@ -26,17 +26,17 @@ export const metadata: Metadata = {
   authors: [{ name: "Hasnain" }],
   creator: "Hasnain",
   openGraph: {
-    title: "TakeNote – AI-Powered Note Taking App",
+    title: "Panna.ai – AI-Powered Note Taking App",
     description:
       "A modern note-taking app with AI features, real-time sync, and markdown support.",
-    url: "https://takenotesai.vercel.app",
-    siteName: "TakeNotes",
+    url: "https://panna.ai",
+    siteName: "Panna.ai",
     images: [
       {
         url: "/opengraph-image.png",
         width: 1200,
         height: 630,
-        alt: "TakeNote App Screenshot",
+      alt: "Panna.ai App Screenshot",
       },
     ],
     locale: "en_US",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "TakeNote – AI-Powered Note Taking App",
+    title: "Panna.ai – AI-Powered Note Taking App",
     description:
       "A modern note-taking app with AI features, real-time sync, and markdown support.",
     images: ["/opengraph-image.png"],
