@@ -1,8 +1,8 @@
-# TakeNotes – AI-Powered Note Taking App
+# Panna.ai – AI-Powered Note Taking App
 
-![TakeNotes Banner](./public/opengraph-image.png)
+![Panna.ai Banner](./public/opengraph-image.png)
 
-A modern, full-stack note-taking application with AI capabilities, real-time synchronization, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
+Panna.ai is a modern, full-stack note-taking application with AI capabilities, real-time synchronization, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
 ---
 
@@ -110,8 +110,8 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 ### Installation
 
 ```bash
-git clone https://github.com/hasnaintypes/take-notes.git
-cd take-notes
+git clone https://github.com/mdtaufique-alam/Panna.ai.git
+cd Panna.ai
 npm install
 cp .env.example .env.local
 # Fill in your environment variables in .env.local
