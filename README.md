@@ -1,12 +1,19 @@
 # Panna.ai – AI-Powered Note Taking App
 
-
+![Panna.ai Banner](./public/opengraph-image.png)
 
 A modern, full-stack note-taking application with AI capabilities, real-time synchronization, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
 ---
 
 ## 🚀 Live Demo
+
+### Landing Page
+![Panna.ai Landing Page](./public/landing-page.png)
+
+### Dashboard Interface
+![Panna.ai Dashboard](./public/dashboard.png)
+
 ---
 
 ## ✨ Features
@@ -47,12 +54,9 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 
 ### 👥 Multi-User Collaboration
 
-- **Shareable Links**: Generate unique links to share notes with anyone
-- **Permission Management**: Control access with Owner/Editor/Viewer roles
-- **Video & Audio Conferencing**: Built-in video calls with screen sharing
-- **Live Chat**: Real-time messaging during collaboration
-- **Presence Indicators**: See who's online and actively editing
-- **Collaborative Editing**: Multiple users can edit simultaneously
+- Share notes with read/write permissions
+- Real-time collaboration panel and user presence indicators
+- Invite system with role management
 
 ### 🤖 AI Integration (Google Gemini)
 

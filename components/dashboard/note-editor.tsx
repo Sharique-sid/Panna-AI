@@ -38,7 +38,6 @@ import { AIToolsMenu } from "@/components/dashboard/ai-tools-menu";
 import { KeyboardShortcutsDialog } from "@/components/dashboard/keyboard-shortcuts-dialog";
 import { FeatureNotReadyDialog } from "@/components/dashboard/feature-not-ready-dialog";
 import { ShareDialog } from "@/components/dashboard/share-dialog";
-import { CollaborationPanel } from "@/components/dashboard/collaboration-panel";
 import { toast } from "sonner";
 import { CategorySelect } from "@/components/dashboard/category-select";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -80,8 +79,6 @@ export function NoteEditor({
   const [publicShareId, setPublicShareId] = useState<string | null>(null);
   const [isPublic, setIsPublic] = useState<boolean>(false);
   const [isOnline] = useState(true);
-  const [showCollabPanel, setShowCollabPanel] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   // Related notes removed
   const [shareOpen, setShareOpen] = useState(false);
@@ -104,17 +101,6 @@ export function NoteEditor({
   } = useAI();
   const isMobile = useIsMobile();
   const supabase = createClient();
-
-  // Get current user
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-      }
-    };
-    getUser();
-  }, [supabase]);
 
   useEffect(() => {
     if (note) {
@@ -783,10 +769,10 @@ export function NoteEditor({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    onClick={() => setShowCollabPanel(!showCollabPanel)}
+                    onClick={() => setFeatureDialog("collaboration")}
                   >
                     <Users className="h-4 w-4 mr-2" />
-                    {showCollabPanel ? "Hide" : "Show"} Collaboration
+                    Collaborate
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShareOpen(true)}>
                     <Share className="h-4 w-4 mr-2" />
@@ -941,16 +927,6 @@ export function NoteEditor({
 
         {/* Related Notes removed */}
       </div>
-
-      {/* Collaboration Panel */}
-      {showCollabPanel && note && currentUserId && (
-        <CollaborationPanel
-          noteId={note.id}
-          currentUserId={currentUserId}
-          isPublic={isPublic}
-          shareLink={publicShareId ? `${window.location.origin}/s/${publicShareId}` : undefined}
-        />
-      )}
 
       {/* Dialogs */}
       <KeyboardShortcutsDialog
