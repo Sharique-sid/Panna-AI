@@ -1,6 +1,6 @@
-# TakeNotes – AI-Powered Note Taking App
+# Panna.ai – AI-Powered Note Taking App
 
-![TakeNotes Banner](./public/opengraph-image.png)
+![Panna.ai Banner](./public/opengraph-image.png)
 
 A modern, full-stack note-taking application with AI capabilities, real-time synchronization, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
@@ -8,7 +8,11 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 
 ## 🚀 Live Demo
 
-![App Demo](./public/demo.png)
+### Landing Page
+![Panna.ai Landing Page](./public/landing-page.png)
+
+### Dashboard Interface
+![Panna.ai Dashboard](./public/dashboard.png)
 
 ---
 
@@ -110,8 +114,8 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 ### Installation
 
 ```bash
-git clone https://github.com/hasnaintypes/take-notes.git
-cd take-notes
+git clone https://github.com/yourusername/panna-ai.git
+cd panna-ai
 npm install
 cp .env.example .env.local
 # Fill in your environment variables in .env.local
@@ -128,7 +132,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 <summary>Click to expand</summary>
 
 ```
-take-notes/
+panna-ai/
 ├── app/                        # Next.js app directory
 │   ├── auth/                  # Authentication pages
 │   ├── dashboard/             # Main application
@@ -212,6 +216,19 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 
 ---
 
+## 👨‍💻 About the Developer
+
+This project is developed by **Hasnain** as a modern, AI-powered note-taking solution. Built with love and attention to detail, Panna.ai combines the best of modern web technologies with intelligent AI features to create a seamless note-taking experience.
+
+### Key Highlights:
+- 🎨 **Beautiful UI/UX**: Clean, minimalist design with dark/light theme support
+- 🤖 **AI-Powered**: Smart features powered by Google Gemini AI
+- 🔄 **Real-time Sync**: Instant synchronization across devices
+- 🔒 **Privacy-First**: Your notes are secure and private
+- 💰 **Free Forever**: No subscriptions, no hidden costs
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
@@ -223,5 +240,6 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 - Check the documentation above
 - Review code comments for implementation details
 - All features are tested and working as expected
+- For issues or questions, please open an issue on GitHub
 
-**Happy note-taking! 📝✨**
+**Happy note-taking with Panna.ai! 📝✨**
