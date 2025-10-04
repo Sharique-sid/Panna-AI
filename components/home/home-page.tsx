@@ -337,17 +337,17 @@ export function HomePage() {
                 Clean & Intuitive Interface
               </h2>
               <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
-                Experience a distraction-free writing environment designed for focus
+                Experience a three-panel layout with sidebar, notes list, and rich text editor
               </p>
             </div>
 
-            <div className="relative max-w-6xl mx-auto">
+            <div className="relative max-w-7xl mx-auto">
               <div className="rounded-3xl overflow-hidden shadow-2xl" style={{ 
-                backgroundColor: theme === 'dark' ? '#171717' : '#ffffff',
-                border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
+                backgroundColor: theme === 'dark' ? '#000000' : '#ffffff',
+                border: `2px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
               }}>
-                <div className="flex items-center gap-3 p-4" style={{ 
-                  backgroundColor: theme === 'dark' ? '#000000' : '#f7f7f7',
+                <div className="flex items-center gap-3 px-6 py-4" style={{ 
+                  backgroundColor: theme === 'dark' ? '#171717' : '#f9f9f9',
                   borderBottom: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
                 }}>
                   <div className="flex gap-2">
@@ -356,20 +356,21 @@ export function HomePage() {
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#28ca42' }}></div>
                   </div>
                   <div className="flex-1 text-center">
-                    <span className="text-sm font-medium" style={{ 
+                    <span className="text-sm font-semibold" style={{ 
                       color: theme === 'dark' ? '#ffffff' : '#000000',
                       fontFamily: 'Inter, sans-serif'
-                    }}>Panna.ai Dashboard</span>
+                    }}>Panna.ai - AI-Powered Notes</span>
                   </div>
                 </div>
-                <div className="p-8 flex justify-center">
+                <div className="p-4 sm:p-8 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
                   <img 
                     src="/demo.png" 
-                    alt="Panna.ai Dashboard Preview"
-                    className="max-w-full h-auto rounded-lg shadow-lg"
+                    alt="Panna.ai Dashboard - Three panel layout with notes, categories, and editor"
+                    className="max-w-full h-auto rounded-xl shadow-2xl border"
                     style={{ 
-                      maxHeight: '500px',
-                      objectFit: 'contain'
+                      maxHeight: '600px',
+                      objectFit: 'contain',
+                      borderColor: theme === 'dark' ? '#333333' : '#e5e5e5'
                     }}
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
