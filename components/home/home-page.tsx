@@ -522,20 +522,18 @@ export function HomePage() {
       <footer className="relative z-10 container mx-auto px-6 py-12 mt-20">
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg" 
-                 style={{ backgroundColor: '#000000' }}>
-              <div className="w-4 h-4 rounded-full flex flex-col justify-center items-center"
-                   style={{ 
-                     backgroundColor: theme === 'dark' ? '#ffffff' : '#000000'
-                   }}>
-                <div className={`w-3 h-px mb-0.5 ${
-                  theme === 'dark' ? 'bg-black' : 'bg-white'
-                }`}></div>
-                <div className={`w-3 h-px ${
-                  theme === 'dark' ? 'bg-black' : 'bg-white'
-                }`}></div>
-              </div>
-            </div>
+            <img
+              src="/123-removebg-preview.png"
+              alt="Panna.ai"
+              className={`w-8 h-8 object-contain ${theme === 'dark' ? 'invert' : ''}`}
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (!target.dataset.fallback) {
+                  target.dataset.fallback = '1';
+                  target.src = '/Panna.ai logo.png';
+                }
+              }}
+            />
             <span className="font-semibold" style={{ 
               color: theme === 'dark' ? '#ffffff' : '#000000',
               fontFamily: 'Inter, sans-serif'
