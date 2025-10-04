@@ -163,7 +163,6 @@ export function AppSidebar({
         <Button onClick={handleNewNote} className="w-full">
           <Plus className="h-4 w-4 mr-2" />
           New Note
-          <span className="ml-auto text-xs text-muted-foreground">Ctrl+Shift+T</span>
         </Button>
       </SidebarHeader>
 

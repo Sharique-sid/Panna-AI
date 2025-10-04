@@ -9,6 +9,17 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- Create storage bucket for user avatars
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'avatars',
+  'avatars',
+  true,
+  5242880, -- 5MB limit
+  ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;
+
 -- Set up RLS policies for the storage bucket
 CREATE POLICY "Users can upload their own images" ON storage.objects
   FOR INSERT
@@ -33,6 +44,33 @@ CREATE POLICY "Users can delete their own images" ON storage.objects
   TO authenticated
   USING (
     bucket_id = 'note-images' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Set up RLS policies for the avatars bucket
+CREATE POLICY "Users can upload their own avatars" ON storage.objects
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    bucket_id = 'avatars' AND
+    auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Users can view all avatars" ON storage.objects
+  FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "Public can view avatars" ON storage.objects
+  FOR SELECT
+  TO anon
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can delete their own avatars" ON storage.objects
+  FOR DELETE
+  TO authenticated
+  USING (
+    bucket_id = 'avatars' AND
     auth.uid()::text = (storage.foldername(name))[1]
   );
 

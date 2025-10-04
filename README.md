@@ -47,9 +47,12 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 
 ### 👥 Multi-User Collaboration
 
-- Share notes with read/write permissions
-- Real-time collaboration panel and user presence indicators
-- Invite system with role management
+- **Shareable Links**: Generate unique links to share notes with anyone
+- **Permission Management**: Control access with Owner/Editor/Viewer roles
+- **Video & Audio Conferencing**: Built-in video calls with screen sharing
+- **Live Chat**: Real-time messaging during collaboration
+- **Presence Indicators**: See who's online and actively editing
+- **Collaborative Editing**: Multiple users can edit simultaneously
 
 ### 🤖 AI Integration (Google Gemini)
 
@@ -107,7 +110,7 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/panna-ai.git
+git clone https://github.com/mdtaufique-alam/panna-ai.git
 cd panna-ai
 npm install
 cp .env.example .env.local

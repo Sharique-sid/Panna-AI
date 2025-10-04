@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createServiceClient } from "@supabase/supabase-js"
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,43 +30,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if avatars bucket exists, create if not
-    const { data: buckets } = await supabase.storage.listBuckets()
-    const avatarsBucket = buckets?.find(bucket => bucket.id === 'avatars')
+    // Use service role client for bucket operations
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Check if avatars bucket exists (case-insensitive)
+    const { data: buckets } = await serviceClient.storage.listBuckets()
+    const avatarsBucket = buckets?.find(bucket => 
+      bucket.id.toLowerCase() === 'avatars' || bucket.id === 'AVATARS'
+    )
     
     if (!avatarsBucket) {
-      // Create the avatars bucket
-      const { error: createBucketError } = await supabase.storage.createBucket('avatars', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-      })
-      
-      if (createBucketError) {
-        console.error('Error creating avatars bucket:', createBucketError)
-        return NextResponse.json({ error: "Failed to create storage bucket" }, { status: 500 })
-      }
+      console.error('Avatars bucket not found. Available buckets:', buckets?.map(b => b.id))
+      return NextResponse.json({ error: "Storage bucket not configured. Please contact support." }, { status: 500 })
     }
+
+    // Use the actual bucket name (case-sensitive)
+    const bucketName = avatarsBucket.id
 
     // Delete old avatar if exists
     const oldAvatarUrl = user.user_metadata?.avatar_url
     if (oldAvatarUrl) {
       try {
-        const oldFileName = oldAvatarUrl.split('/').pop()
-        if (oldFileName) {
-          await supabase.storage.from("avatars").remove([oldFileName])
+        // Extract the file path from the URL
+        const urlParts = oldAvatarUrl.split('/')
+        const bucketIndex = urlParts.findIndex(part => part.toLowerCase() === 'avatars')
+        if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
+          const filePath = urlParts.slice(bucketIndex + 1).join('/')
+          await serviceClient.storage.from(bucketName).remove([filePath])
         }
       } catch (error) {
         console.warn('Could not delete old avatar:', error)
       }
     }
 
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage with proper folder structure
     const fileExtension = file.name.split(".").pop() || 'jpg'
-    const fileName = `${user.id}-${Date.now()}.${fileExtension}`
+    const fileName = `${user.id}/${Date.now()}.${fileExtension}`
     
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("avatars")
+    const { data: uploadData, error: uploadError } = await serviceClient.storage
+      .from(bucketName)
       .upload(fileName, file, {
         cacheControl: "3600",
         upsert: true,
@@ -79,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from("avatars").getPublicUrl(fileName)
+    } = serviceClient.storage.from(bucketName).getPublicUrl(fileName)
 
     // Update user metadata
     const { data: userData, error: updateError } = await supabase.auth.updateUser({
@@ -112,13 +118,22 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Use service role client for bucket operations
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     // Delete old avatar from storage if exists
     const oldAvatarUrl = user.user_metadata?.avatar_url
     if (oldAvatarUrl) {
       try {
-        const oldFileName = oldAvatarUrl.split('/').pop()
-        if (oldFileName) {
-          await supabase.storage.from("avatars").remove([oldFileName])
+        // Extract the file path from the URL
+        const urlParts = oldAvatarUrl.split('/')
+        const bucketIndex = urlParts.findIndex(part => part.toLowerCase() === 'avatars')
+        if (bucketIndex !== -1 && bucketIndex + 1 < urlParts.length) {
+          const filePath = urlParts.slice(bucketIndex + 1).join('/')
+          await serviceClient.storage.from('avatars').remove([filePath])
         }
       } catch (error) {
         console.warn('Could not delete old avatar from storage:', error)
