@@ -48,3 +48,4 @@ echo "📋 Next steps:"
 echo "1. Restart your development server: npm run dev"
 echo "2. Try uploading an avatar in the settings page"
 echo "3. If you still get errors, check the Supabase dashboard for any RLS policy issues"
+

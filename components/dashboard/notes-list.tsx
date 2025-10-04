@@ -51,6 +51,7 @@ export function NotesList({
   const [draggedNote, setDraggedNote] = useState<Note | null>(null);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleToggleMultiSelect = () => {
     if (isMultiSelectMode) {
@@ -111,6 +112,15 @@ export function NotesList({
     });
     setSelectedNotes(new Set());
     setIsMultiSelectMode(false);
+  };
+
+  const handlePurgeSelected = () => {
+    selectedNotes.forEach(noteId => {
+      purgeNote(noteId);
+    });
+    setSelectedNotes(new Set());
+    setIsMultiSelectMode(false);
+    setShowDeleteConfirm(false);
   };
 
   const handleToggleFavorite = (e: React.MouseEvent, noteId: string) => {
@@ -181,15 +191,38 @@ export function NotesList({
                 {selectedNotes.size === notes.length ? "None" : "All"}
               </Button>
               {selectedCategory === "trash" ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRecoverSelected}
-                  className="h-6 px-2 text-xs text-green-600 hover:text-green-600"
-                  disabled={selectedNotes.size === 0}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRecoverSelected}
+                    className="h-6 px-2 text-xs text-green-600 hover:text-green-600"
+                    disabled={selectedNotes.size === 0}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                  <DropdownMenu open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                        disabled={selectedNotes.size === 0}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={handlePurgeSelected}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete {selectedNotes.size} note(s) permanently
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : (
                 <Button
                   variant="ghost"
