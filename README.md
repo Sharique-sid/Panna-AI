@@ -9,10 +9,15 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 ## 🚀 Live Demo
 
 ### Landing Page
-![Panna.ai Landing Page](./public/landing-page.png)
+![Panna.ai Landing Page](./public/demo.png)
 
 ### Dashboard Interface
-![Panna.ai Dashboard](./public/dashboard.png)
+Experience a clean, modern three-panel layout with:
+- **Sidebar**: Quick access to all notes, favorites, and categories
+- **Notes List**: Browse and search through your notes with timestamps
+- **Editor**: Rich text editor with AI tools, tags, and image support
+
+![Panna.ai Dashboard](./public/demo.png)
 
 ---
 
