@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,7 +35,13 @@ export function SignInForm({
 }: React.ComponentProps<"div">) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -73,21 +79,64 @@ export function SignInForm({
     }
   };
 
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className={cn("flex flex-col gap-6", className)} {...props}>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-10 w-10 bg-muted rounded animate-pulse"></div>
+            <h1 className="text-2xl font-bold">Welcome back</h1>
+            <div className="text-center text-sm text-muted-foreground">
+              Don't have an account?{" "}
+              <Link
+                href="/auth/signup"
+                className="font-medium underline underline-offset-4"
+              >
+                Sign up
+              </Link>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded animate-pulse"></div>
+              <div className="h-10 bg-muted rounded animate-pulse"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded animate-pulse"></div>
+              <div className="h-10 bg-muted rounded animate-pulse"></div>
+            </div>
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-600">
-            <Sparkles className="size-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <img
+            src="/123-removebg-preview.png"
+            alt="Panna.ai"
+            className="h-10 w-10 object-contain dark:invert"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              if (!target.dataset.fallback) {
+                target.dataset.fallback = '1';
+                target.src = '/123-removebg-preview.jpg';
+              }
+            }}
+          />
+          <h1 className="text-2xl font-bold text-foreground">
             Welcome back
           </h1>
           <div className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
               href="/auth/signup"
-              className="font-medium text-purple-600 hover:text-purple-500 underline underline-offset-4"
+              className="font-medium underline underline-offset-4 text-foreground hover:text-primary"
             >
               Sign up
             </Link>
@@ -147,14 +196,14 @@ export function SignInForm({
             <div className="flex justify-end">
               <Link
                 href="/auth/forgot-password"
-                className="text-sm text-purple-600 hover:text-purple-500 underline underline-offset-4"
+                className="text-sm underline underline-offset-4 text-foreground hover:text-primary"
               >
                 Forgot password?
               </Link>
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={loading}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -164,18 +213,18 @@ export function SignInForm({
         </Form>
       </div>
 
-      <div className="text-muted-foreground text-center text-xs text-balance">
+      <div className="text-center text-xs text-balance text-muted-foreground">
         By continuing, you agree to our{" "}
         <a
           href="#"
-          className="underline underline-offset-4 hover:text-purple-600"
+          className="underline underline-offset-4 text-foreground hover:text-primary"
         >
           Terms of Service
         </a>{" "}
         and{" "}
         <a
           href="#"
-          className="underline underline-offset-4 hover:text-purple-600"
+          className="underline underline-offset-4 text-foreground hover:text-primary"
         >
           Privacy Policy
         </a>

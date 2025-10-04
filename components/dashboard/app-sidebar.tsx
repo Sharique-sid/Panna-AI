@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FileText,
   Star,
@@ -10,8 +10,8 @@ import {
   Folder,
   Settings,
   LogOut,
-  Sparkles,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import {
   Sidebar,
   SidebarContent,
@@ -45,6 +45,7 @@ interface AppSidebarProps {
   onCategorySelect: (categoryId: string | null) => void;
   user: User;
   onCreateCategory: (name: string) => void;
+  onToggleSidebar?: () => void;
 }
 
 export function AppSidebar({
@@ -53,9 +54,17 @@ export function AppSidebar({
   onCategorySelect,
   user,
   onCreateCategory,
+  onToggleSidebar,
 }: AppSidebarProps) {
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
+  // Avoid hydration mismatches for theme-dependent UI
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { createNote, notes } = useNotesStore();
   const router = useRouter();
@@ -115,14 +124,38 @@ export function AppSidebar({
     },
   ];
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <Sidebar className="border-r bg-sidebar data-[mobile=true]:bg-sidebar">
       <SidebarHeader className="p-4 border-b bg-sidebar/95 backdrop-blur">
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold text-lg bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={onToggleSidebar}
+            className="relative flex items-center justify-center w-10 h-10 hover:bg-muted/50 rounded-lg transition-colors duration-200"
+            title="Toggle sidebar"
+          >
+            {/* Static logo image with jpg fallback */}
+            <img
+              src="/123-removebg-preview.png"
+              alt="Panna.ai"
+              className={`w-10 h-10 object-contain ${theme === 'dark' ? 'invert' : ''}`}
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (!target.dataset.fallback) {
+                  target.dataset.fallback = '1';
+                  target.src = '/123-removebg-preview.jpg';
+                }
+              }}
+            />
+          </button>
+          <span className={`font-bold text-xl ${
+            theme === 'dark' 
+              ? 'text-white' 
+              : 'text-black'
+          }`}>
             Panna.ai
           </span>
         </div>
@@ -130,6 +163,7 @@ export function AppSidebar({
         <Button onClick={handleNewNote} className="w-full">
           <Plus className="h-4 w-4 mr-2" />
           New Note
+          <span className="ml-auto text-xs text-muted-foreground">Ctrl+Shift+T</span>
         </Button>
       </SidebarHeader>
 
@@ -159,7 +193,7 @@ export function AppSidebar({
 
         <Separator className="my-3" />
 
-        <SidebarGroup className="flex-1 overflow-hidden">
+        <SidebarGroup className="flex-1 overflow-hidden min-h-0">
           <SidebarGroupLabel className="flex items-center justify-between">
             <span>Categories</span>
             <Button
@@ -172,8 +206,8 @@ export function AppSidebar({
             </Button>
           </SidebarGroupLabel>
 
-          <SidebarGroupContent className="overflow-hidden">
-            <div className="overflow-y-auto max-h-[300px] scrollbar-none">
+          <SidebarGroupContent className="overflow-hidden min-h-0">
+            <div className="h-full overflow-y-auto pr-1">
               <SidebarMenu>
                 {isCreatingCategory && (
                   <SidebarMenuItem>
@@ -244,8 +278,8 @@ export function AppSidebar({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start h-12 px-3">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shrink-0">
-                  <span className="text-white text-sm font-medium">
+                <div className="h-8 w-8 rounded-full bg-neutral-800 text-white dark:bg-white dark:text-black flex items-center justify-center shrink-0 border border-neutral-300/50 dark:border-neutral-300/30">
+                  <span className="text-sm font-medium">
                     {user.user_metadata?.first_name?.[0] ||
                       user.email?.[0]?.toUpperCase()}
                   </span>

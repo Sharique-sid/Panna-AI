@@ -21,6 +21,9 @@ CREATE TABLE notes (
   category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
   tags TEXT[] DEFAULT '{}',
   is_favorite BOOLEAN DEFAULT FALSE,
+  -- Public sharing fields
+  public_share_id TEXT UNIQUE,
+  is_public BOOLEAN DEFAULT FALSE,
   deleted_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -110,7 +113,7 @@ CREATE POLICY "Users can view their own notes and shared notes" ON notes
       WHERE note_collaborators.note_id = notes.id 
       AND note_collaborators.user_id = auth.uid()
       AND note_collaborators.accepted_at IS NOT NULL
-    )
+    ) OR (notes.is_public = TRUE)
   );
 
 CREATE POLICY "Users can insert their own notes" ON notes

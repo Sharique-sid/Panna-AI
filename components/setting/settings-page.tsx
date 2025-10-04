@@ -188,11 +188,26 @@ export function SettingsPage({ user }: SettingsPageProps) {
   const onUpdatePassword = async (data: PasswordFormData) => {
     setLoading(true);
     try {
-      // This would need to be implemented with proper current password verification
-      toast("Your password has been updated successfully.");
+      const response = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update password");
+      }
+
+      toast.success("Your password has been updated successfully.");
       passwordForm.reset();
-    } catch (error) {
-      toast("Failed to update password");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update password");
     } finally {
       setLoading(false);
     }
@@ -203,6 +218,18 @@ export function SettingsPage({ user }: SettingsPageProps) {
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
 
     setAvatarLoading(true);
     try {
@@ -216,14 +243,15 @@ export function SettingsPage({ user }: SettingsPageProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error);
+        throw new Error(error.error || "Upload failed");
       }
 
       const data = await response.json();
-      toast("Your profile picture has been updated.");
+      toast.success("Your profile picture has been updated.");
       router.refresh();
     } catch (error: any) {
-      toast("Failed to upload avatar");
+      console.error("Avatar upload error:", error);
+      toast.error(error.message || "Failed to upload avatar");
     } finally {
       setAvatarLoading(false);
     }
@@ -238,13 +266,14 @@ export function SettingsPage({ user }: SettingsPageProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error);
+        throw new Error(error.error || "Remove failed");
       }
 
-      toast("Your profile picture has been removed.");
+      toast.success("Your profile picture has been removed.");
       router.refresh();
     } catch (error: any) {
-      toast("Failed to remove avatar");
+      console.error("Avatar removal error:", error);
+      toast.error(error.message || "Failed to remove avatar");
     } finally {
       setAvatarLoading(false);
     }
@@ -258,10 +287,16 @@ export function SettingsPage({ user }: SettingsPageProps) {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+            <h1
+              className="text-3xl font-bold"
+              style={{ color: theme === "dark" ? "#ffffff" : "#000000", fontFamily: "Inter, sans-serif" }}
+            >
               Settings
             </h1>
-            <p className="text-muted-foreground">
+            <p
+              className="text-sm"
+              style={{ color: theme === "dark" ? "#f2f2f2" : "#666666", fontFamily: "Inter, sans-serif" }}
+            >
               Manage your account and preferences
             </p>
           </div>
@@ -289,6 +324,8 @@ export function SettingsPage({ user }: SettingsPageProps) {
               Notifications
             </TabsTrigger>
           </TabsList>
+
+          <div className="min-h-[600px]">
 
           <TabsContent value="profile">
             <div className="space-y-6">
@@ -408,7 +445,8 @@ export function SettingsPage({ user }: SettingsPageProps) {
                       />
                       <Button
                         type="submit"
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                        className=""
+                        style={{ backgroundColor: "#000000", color: "#ffffff", fontFamily: "Inter, sans-serif" }}
                         disabled={loading}
                       >
                         {loading && (
@@ -538,7 +576,8 @@ export function SettingsPage({ user }: SettingsPageProps) {
                     />
                     <Button
                       type="submit"
-                      className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      className=""
+                      style={{ backgroundColor: "#000000", color: "#ffffff", fontFamily: "Inter, sans-serif" }}
                       disabled={loading}
                     >
                       {loading && (
@@ -730,6 +769,7 @@ export function SettingsPage({ user }: SettingsPageProps) {
               </CardContent>
             </Card>
           </TabsContent>
+          </div>
         </Tabs>
       </div>
     </div>

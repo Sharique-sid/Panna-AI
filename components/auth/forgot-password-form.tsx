@@ -73,10 +73,19 @@ export function ForgotPasswordForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-2">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-600">
-            <Sparkles className="size-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <img
+            src="/123-removebg-preview.png"
+            alt="Panna.ai"
+            className="h-10 w-10 object-contain dark:invert"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              if (!target.dataset.fallback) {
+                target.dataset.fallback = '1';
+                target.src = '/123-removebg-preview.jpg';
+              }
+            }}
+          />
+          <h1 className="text-2xl font-bold text-foreground">
             Reset your password
           </h1>
           <p className="text-center text-sm text-muted-foreground">
@@ -105,7 +114,7 @@ export function ForgotPasswordForm({
             />
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={loading}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -117,7 +126,7 @@ export function ForgotPasswordForm({
         <div className="flex items-center justify-center">
           <Link
             href="/auth/signin"
-            className="flex items-center gap-2 text-sm text-purple-600 hover:text-purple-500 underline underline-offset-4"
+            className="flex items-center gap-2 text-sm underline underline-offset-4 text-foreground hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to sign in

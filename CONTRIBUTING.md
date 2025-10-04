@@ -1,6 +1,6 @@
-# Contributing to TakeNotes
+# Contributing to Panna.ai
 
-Thank you for your interest in contributing to **TakeNotes**! We welcome all kinds of contributions, including bug reports, feature requests, documentation improvements, and code enhancements.
+Thank you for your interest in contributing to **Panna.ai**! We welcome all kinds of contributions, including bug reports, feature requests, documentation improvements, and code enhancements.
 
 ## Getting Started
 
@@ -37,7 +37,7 @@ Thank you for your interest in contributing to **TakeNotes**! We welcome all kin
 
 If you find a bug or have a feature request:
 
-1. [Open an issue](https://github.com/hasnaintypes/take-notes/issues).
+1. [Open an issue](https://github.com/hasnaintypes/panna.ai/issues).
 2. Provide as much detail as possible (steps to reproduce, expected behavior, screenshots, etc.).
 
 ## Community
@@ -45,4 +45,4 @@ If you find a bug or have a feature request:
 - Be respectful and inclusive.
 - Help others by reviewing PRs and answering questions.
 
-Thank you for helping make TakeNotes better! 🚀
+Thank you for helping make Panna.ai better! 🚀

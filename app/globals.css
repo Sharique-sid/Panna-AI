@@ -4,6 +4,55 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Prevent flash of unstyled content */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Ensure proper dark mode styling for auth forms */
+.dark .text-foreground {
+  color: var(--foreground) !important;
+}
+
+.dark .text-muted-foreground {
+  color: var(--muted-foreground) !important;
+}
+
+.dark .text-primary {
+  color: var(--primary) !important;
+}
+
+.dark .bg-primary {
+  background-color: var(--primary) !important;
+}
+
+.dark .text-primary-foreground {
+  color: var(--primary-foreground) !important;
+}
+
+/* Ensure form elements are properly styled in dark mode */
+.dark [data-slot="label"] {
+  color: var(--foreground) !important;
+}
+
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="text"] {
+  background-color: var(--background) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+.dark input[type="email"]::placeholder,
+.dark input[type="password"]::placeholder,
+.dark input[type="text"]::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0 0);

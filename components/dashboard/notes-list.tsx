@@ -7,10 +7,15 @@ import {
   Star,
   Trash2,
   MoreHorizontal,
-  FileText,
   Calendar,
   Tag,
   Loader2,
+  FileText,
+  CheckSquare,
+  Square,
+  CheckCheck,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +33,7 @@ import { cn } from "@/lib/utils";
 interface NotesListProps {
   notes: Note[];
   selectedNote: Note | null;
+  selectedCategory: string;
   onNoteSelect: (note: Note) => void;
   isLoading?: boolean;
   className?: string;
@@ -36,12 +42,76 @@ interface NotesListProps {
 export function NotesList({
   notes,
   selectedNote,
+  selectedCategory,
   onNoteSelect,
   isLoading = false,
   className,
 }: NotesListProps) {
-  const { toggleFavorite, deleteNote, duplicateNote, purgeNote } = useNotesStore();
+  const { toggleFavorite, deleteNote, duplicateNote, purgeNote, restoreNote } = useNotesStore();
   const [draggedNote, setDraggedNote] = useState<Note | null>(null);
+  const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+
+  const handleToggleMultiSelect = () => {
+    if (isMultiSelectMode) {
+      // Exit multi-select mode
+      setIsMultiSelectMode(false);
+      setSelectedNotes(new Set());
+    } else {
+      // Enter multi-select mode
+      setIsMultiSelectMode(true);
+    }
+  };
+
+  const handleNoteClick = (e: React.MouseEvent, note: Note) => {
+    e.preventDefault();
+
+    if (isMultiSelectMode) {
+      // In multi-select mode, toggle selection
+      setSelectedNotes(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(note.id)) {
+          newSet.delete(note.id);
+        } else {
+          newSet.add(note.id);
+        }
+        return newSet;
+      });
+    } else if (e.ctrlKey || e.metaKey) {
+      // Ctrl/Cmd+click starts multi-select mode
+      setIsMultiSelectMode(true);
+      setSelectedNotes(new Set([note.id]));
+    } else {
+      // Normal single selection
+      setIsMultiSelectMode(false);
+      setSelectedNotes(new Set());
+      onNoteSelect(note);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedNotes.size === notes.length) {
+      setSelectedNotes(new Set());
+    } else {
+      setSelectedNotes(new Set(notes.map(note => note.id)));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    selectedNotes.forEach(noteId => {
+      deleteNote(noteId);
+    });
+    setSelectedNotes(new Set());
+    setIsMultiSelectMode(false);
+  };
+
+  const handleRecoverSelected = () => {
+    selectedNotes.forEach(noteId => {
+      restoreNote(noteId);
+    });
+    setSelectedNotes(new Set());
+    setIsMultiSelectMode(false);
+  };
 
   const handleToggleFavorite = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation();
@@ -53,14 +123,16 @@ export function NotesList({
     deleteNote(noteId);
   };
 
-  const handleDuplicateNote = (e: React.MouseEvent, noteId: string) => {
-    e.stopPropagation();
-    duplicateNote(noteId);
-  };
+  // duplicate action removed per request
 
   const handlePurgeNote = (e: React.MouseEvent, noteId: string) => {
     e.stopPropagation();
     purgeNote(noteId);
+  };
+
+  const handleRestoreNote = (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation();
+    restoreNote(noteId);
   };
 
   const handleDragStart = (e: React.DragEvent, note: Note) => {
@@ -87,16 +159,78 @@ export function NotesList({
 
   return (
     <div className={cn("h-full flex flex-col bg-muted/10", className)}>
-      <div className="p-4 border-b bg-background/95 backdrop-blur">
+      <div className="p-4 border-b border-muted-foreground/20 bg-background/95 backdrop-blur">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Notes</h2>
-          <Badge variant="secondary" className="text-xs">
-            {notes.length}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold">Notes</h2>
+            {isMultiSelectMode && (
+              <Badge variant="outline" className="text-xs">
+                {selectedNotes.size} selected
+              </Badge>
+            )}
+          </div>
+        <div className="flex items-center gap-2">
+          {isMultiSelectMode ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSelectAll}
+                className="h-6 px-2 text-xs"
+              >
+                {selectedNotes.size === notes.length ? "None" : "All"}
+              </Button>
+              {selectedCategory === "trash" ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRecoverSelected}
+                  className="h-6 px-2 text-xs text-green-600 hover:text-green-600"
+                  disabled={selectedNotes.size === 0}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                  disabled={selectedNotes.size === 0}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToggleMultiSelect}
+                className="h-6 px-2 text-xs"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleToggleMultiSelect}
+                className="h-6 px-2 text-xs"
+              >
+                <CheckCheck className="h-3 w-3 mr-1" />
+                Multi-Select
+              </Button>
+              <Badge variant="secondary" className="text-xs">
+                {notes.length}
+              </Badge>
+            </>
+          )}
+        </div>
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-3 space-y-2">
           {isLoading ? (
             <div className="text-center py-12 text-muted-foreground">
@@ -124,62 +258,88 @@ export function NotesList({
                   "p-3 rounded-lg cursor-pointer hover:bg-accent/50 transition-all duration-200 group border border-transparent",
                   selectedNote?.id === note.id &&
                     "bg-accent border-accent-foreground/20 shadow-sm",
+                  selectedNotes.has(note.id) && isMultiSelectMode &&
+                    "bg-accent/30 border-accent-foreground/30 shadow-sm",
                   draggedNote?.id === note.id && "opacity-50"
                 )}
-                onClick={() => onNoteSelect(note)}
+                onClick={(e) => handleNoteClick(e, note)}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium truncate">
-                        {note.title || "Untitled"}
-                      </h3>
-                    </div>
-
-                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                      {note.content?.replace(/[#*`]/g, "") || "No content"}
-                    </p>
-
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span className="truncate">
-                          {formatDistanceToNow(new Date(note.updatedAt), {
-                            addSuffix: true,
-                          })}
-                        </span>
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    {(isMultiSelectMode || selectedNotes.has(note.id)) && (
+                      <div className="mt-0.5">
+                        {selectedNotes.has(note.id) ? (
+                          <CheckSquare className="h-4 w-4 text-primary" />
+                        ) : (
+                          <Square className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium truncate">
+                          {note.title || "Untitled"}
+                        </h3>
                       </div>
 
-                      {note.tags && note.tags.length > 0 && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                        {note.content?.replace(/[#*`]/g, "").replace(/!\[.*?\]\(.*?\)/g, "").replace(/<!-- Images -->.*$/s, "").trim() || "No content"}
+                      </p>
+
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          <Badge
-                            variant="outline"
-                            className="text-xs px-1.5 py-0 h-4"
-                          >
-                            {note.tags[0]}
-                            {note.tags.length > 1 &&
-                              ` +${note.tags.length - 1}`}
-                          </Badge>
+                          <Calendar className="h-3 w-3" />
+                          <span className="truncate">
+                            {formatDistanceToNow(new Date(note.updatedAt), {
+                              addSuffix: true,
+                            })}
+                          </span>
                         </div>
-                      )}
+
+                        {note.tags && note.tags.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <Tag className="h-3 w-3" />
+                            <Badge
+                              variant="outline"
+                              className="text-xs px-1.5 py-0 h-4"
+                            >
+                              {note.tags[0]}
+                              {note.tags.length > 1 &&
+                                ` +${note.tags.length - 1}`}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={(e) => handleToggleFavorite(e, note.id)}
-                    >
-                      <Star
-                        className={cn(
-                          "h-4 w-4",
-                          note.isFavorite && "fill-yellow-400 text-yellow-400"
-                        )}
-                      />
-                    </Button>
+                    {!note.deletedAt && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        onClick={(e) => handleToggleFavorite(e, note.id)}
+                      >
+                        <Star
+                          className={cn(
+                            "h-4 w-4",
+                            note.isFavorite && "fill-yellow-400 text-yellow-400"
+                          )}
+                        />
+                      </Button>
+                    )}
+                    
+                    {note.deletedAt && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-green-600 hover:text-green-600"
+                        onClick={(e) => handleRestoreNote(e, note.id)}
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    )}
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -192,14 +352,6 @@ export function NotesList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {!note.deletedAt && (
-                          <DropdownMenuItem
-                            onClick={(e) => handleDuplicateNote(e, note.id)}
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Duplicate
-                          </DropdownMenuItem>
-                        )}
                         {note.deletedAt ? (
                           <DropdownMenuItem
                             onClick={(e) => handlePurgeNote(e, note.id)}

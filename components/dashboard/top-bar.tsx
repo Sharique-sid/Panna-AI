@@ -30,7 +30,7 @@ export function TopBar({
   return (
     <div
       className={cn(
-        "h-12 sm:h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center px-3 sm:px-4 gap-3 shrink-0 justify-between",
+        "h-12 sm:h-14 border-b border-muted-foreground/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center px-3 sm:px-4 gap-3 shrink-0 justify-between",
         className
       )}
     >

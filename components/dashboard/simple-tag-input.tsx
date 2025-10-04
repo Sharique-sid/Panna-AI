@@ -89,10 +89,10 @@ export function SimpleTagInput({
         />
       ) : (
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() => setIsInputVisible(true)}
-          className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground border border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 shrink-0"
+          className="h-8 px-3 text-xs shrink-0"
         >
           <Plus className="h-3 w-3 mr-1" />
           Add tag

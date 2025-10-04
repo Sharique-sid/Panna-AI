@@ -6,7 +6,6 @@ import { AppSidebar } from "./app-sidebar";
 import { TopBar } from "./top-bar";
 import { NotesList } from "./notes-list";
 import { NoteEditor } from "./note-editor";
-import { RelatedNotesDialog } from "./related-notes-dialog";
 import { useNotesStore } from "@/hooks/use-notes-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { User } from "@/types";
@@ -32,25 +31,51 @@ export function DashboardLayout({ user }: DashboardLayoutProps) {
     createCategory,
   } = useNotesStore();
 
-  const [showRelatedDialog, setShowRelatedDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const isMobile = useIsMobile();
 
   // Load data on mount
   useEffect(() => {
-    loadNotes();
-    loadCategories();
+    const loadData = async () => {
+      try {
+        await Promise.all([loadNotes(), loadCategories()]);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      }
+    };
+    loadData();
   }, [loadNotes, loadCategories]);
 
   // Filter notes based on selected category and search query
-  const filteredNotes =
-    selectedCategory === "trash"
+  const normalizedQuery = (searchQuery || "").trim().toLowerCase();
+  const byCategory =
+    normalizedQuery
+      ? // When searching, ignore specific categories and search across all
+        (selectedCategory === "trash"
+          ? notes.filter((n) => n.deletedAt)
+          : notes.filter((n) => !n.deletedAt))
+      : // Normal (non-search) filtering by selected category
+        selectedCategory === "trash"
       ? notes.filter((n) => n.deletedAt)
       : selectedCategory === "favorites"
       ? notes.filter((n) => n.isFavorite && !n.deletedAt)
       : selectedCategory === "all"
       ? notes.filter((n) => !n.deletedAt)
       : notes.filter((n) => n.categoryId === selectedCategory && !n.deletedAt);
+
+  const filteredNotes = normalizedQuery
+    ? byCategory.filter((n) => {
+        const title = (n.title || "").toLowerCase();
+        const content = (n.content || "").replace(/!\[.*?\]\(.*?\)/g, "").toLowerCase();
+        const tagsText = (n.tags || []).join(" ").toLowerCase();
+        return (
+          title.includes(normalizedQuery) ||
+          content.includes(normalizedQuery) ||
+          tagsText.includes(normalizedQuery)
+        );
+      })
+    : byCategory;
 
   // Auto-hide sidebar on mobile when note is selected
   useEffect(() => {
@@ -89,6 +114,7 @@ export function DashboardLayout({ user }: DashboardLayoutProps) {
           onCategorySelect={setSelectedCategory}
           user={user}
           onCreateCategory={createCategory}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
         <SidebarInset className="flex flex-col">
@@ -100,18 +126,22 @@ export function DashboardLayout({ user }: DashboardLayoutProps) {
             showBackButton={isMobile && !!selectedNote}
           />
 
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden min-h-0">
             {/* Notes List - Hidden on mobile when note is selected */}
             <div
               className={cn(
-                "border-r bg-muted/10 transition-all duration-300",
+                "border-r border-muted-foreground/20 bg-muted/10 min-h-0 overflow-hidden transform transition-all duration-300",
                 isMobile && selectedNote ? "hidden" : "flex",
-                isMobile ? "flex-1" : "w-80 xl:w-96"
+                isMobile ? "flex-1" : "w-80 xl:w-96",
+                isFocusMode ? "-translate-x-full" : "translate-x-0"
               )}
+              style={{ width: isFocusMode && !isMobile ? 0 : undefined }}
+              aria-hidden={isFocusMode}
             >
               <NotesList
                 notes={filteredNotes}
                 selectedNote={selectedNote}
+                selectedCategory={selectedCategory}
                 onNoteSelect={handleNoteSelect}
                 className="w-full"
                 isLoading={isLoading}
@@ -130,21 +160,13 @@ export function DashboardLayout({ user }: DashboardLayoutProps) {
                 categories={categories}
                 onBackToList={handleBackToList}
                 showBackButton={isMobile}
+                isFocusMode={isFocusMode}
+                onToggleFocusMode={() => setIsFocusMode((v) => !v)}
               />
             </div>
           </div>
         </SidebarInset>
       </div>
-
-      {/* Related Notes Dialog for mobile */}
-      {selectedNote && (
-        <RelatedNotesDialog
-          open={showRelatedDialog}
-          onOpenChange={setShowRelatedDialog}
-          noteId={selectedNote.id}
-          content={selectedNote.content || ""}
-        />
-      )}
     </SidebarProvider>
   );
 }

@@ -25,6 +25,20 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Hasnain" }],
   creator: "Hasnain",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/123-removebg-preview.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    other: [
+      // Swap these URLs to dedicated light/dark assets when available
+      { rel: "icon", url: "/favicon.svg", media: "(prefers-color-scheme: light)" },
+      { rel: "icon", url: "/favicon.svg", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
   openGraph: {
     title: "Panna.ai – AI-Powered Note Taking App",
     description:
@@ -58,7 +72,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark')
+                } else {
+                  document.documentElement.classList.remove('dark')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

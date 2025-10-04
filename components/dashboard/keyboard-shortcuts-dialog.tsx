@@ -26,12 +26,13 @@ export function KeyboardShortcutsDialog({
         { keys: ["Ctrl", "I"], description: "Italic text" },
         { keys: ["Ctrl", "U"], description: "Underline" },
         { keys: ["Ctrl", "K"], description: "Insert link" },
+        { keys: ["Ctrl", "Shift", "E"], description: "Toggle preview" },
       ],
     },
     {
       category: "Navigation",
       items: [
-        { keys: ["Ctrl", "N"], description: "New note" },
+        { keys: ["Ctrl", "Shift", "T"], description: "New note" },
         { keys: ["Ctrl", "S"], description: "Save note" },
         { keys: ["Ctrl", "F"], description: "Search" },
         { keys: ["Esc"], description: "Close dialogs" },

@@ -444,6 +444,55 @@ export const useNotesStore = create<NotesStore>()(
         selectedCategory: state.selectedCategory,
         searchQuery: state.searchQuery,
       }),
+      // Add storage size limit to prevent 431 errors
+      storage: {
+        getItem: (name: string) => {
+          try {
+            // Check if we're in bypass mode
+            if (typeof window !== 'undefined') {
+              if (window.location.pathname.includes('force-clear') || 
+                  window.location.pathname.includes('bypass-storage') ||
+                  sessionStorage.getItem('bypass-persistence') === 'true') {
+                return null;
+              }
+            }
+            
+            const item = localStorage.getItem(name);
+            if (item && item.length > 50000) { // 50KB limit (reduced)
+              console.warn("Storage item too large, clearing:", name);
+              localStorage.removeItem(name);
+              return null;
+            }
+            return item;
+          } catch (error) {
+            console.error("Error reading from storage:", error);
+            return null;
+          }
+        },
+        setItem: (name: string, value: string) => {
+          try {
+            // Check if we're in bypass mode
+            if (typeof window !== 'undefined' && sessionStorage.getItem('bypass-persistence') === 'true') {
+              return; // Don't save anything in bypass mode
+            }
+            
+            if (value.length > 50000) { // 50KB limit (reduced)
+              console.warn("Storage item too large, not saving:", name);
+              return;
+            }
+            localStorage.setItem(name, value);
+          } catch (error) {
+            console.error("Error writing to storage:", error);
+          }
+        },
+        removeItem: (name: string) => {
+          try {
+            localStorage.removeItem(name);
+          } catch (error) {
+            console.error("Error removing from storage:", error);
+          }
+        },
+      },
     }
   )
 );

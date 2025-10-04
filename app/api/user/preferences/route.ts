@@ -29,7 +29,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return NextResponse.json({ preferences: data || {} })
+    // Map database column names to frontend property names
+    const preferences = data ? {
+      theme: data.theme,
+      fontSize: data.font_size,
+      editorTheme: data.editor_theme,
+      autoSave: data.auto_save,
+      emailNotifications: data.email_notifications,
+      pushNotifications: data.push_notifications,
+      weeklyDigest: data.weekly_digest,
+    } : {}
+
+    return NextResponse.json({ preferences })
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
@@ -49,13 +60,22 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Map frontend property names to database column names
+    const dbPreferences = {
+      user_id: user.id,
+      theme: preferences.theme,
+      font_size: preferences.fontSize,
+      editor_theme: preferences.editorTheme,
+      auto_save: preferences.autoSave,
+      email_notifications: preferences.emailNotifications,
+      push_notifications: preferences.pushNotifications,
+      weekly_digest: preferences.weeklyDigest,
+      updated_at: new Date().toISOString(),
+    }
+
     const { data, error } = await supabase
       .from("user_preferences")
-      .upsert({
-        user_id: user.id,
-        ...preferences,
-        updated_at: new Date().toISOString(),
-      })
+      .upsert(dbPreferences)
       .select()
       .single()
 
@@ -63,7 +83,18 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    return NextResponse.json({ preferences: data })
+    // Map back to frontend property names
+    const responsePreferences = {
+      theme: data.theme,
+      fontSize: data.font_size,
+      editorTheme: data.editor_theme,
+      autoSave: data.auto_save,
+      emailNotifications: data.email_notifications,
+      pushNotifications: data.push_notifications,
+      weeklyDigest: data.weekly_digest,
+    }
+
+    return NextResponse.json({ preferences: responsePreferences })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid input data" }, { status: 400 })

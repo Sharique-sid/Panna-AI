@@ -6,6 +6,8 @@ export interface Note {
   categoryId: string | null
   tags?: string[]
   isFavorite: boolean
+  publicShareId?: string | null
+  isPublic?: boolean
   deletedAt: string | null
   createdAt: string
   updatedAt: string
