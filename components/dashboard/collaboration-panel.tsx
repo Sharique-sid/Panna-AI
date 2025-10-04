@@ -72,35 +72,10 @@ export function CollaborationPanel({
   // Load collaborators
   useEffect(() => {
     loadCollaborators()
-    subscribeToPresence()
   }, [noteId])
 
-  // Load chat messages
+  // Subscribe to presence
   useEffect(() => {
-    loadChatMessages()
-    subscribeToChat()
-  }, [noteId])
-
-  const loadCollaborators = async () => {
-    // TODO: Load from database
-    // Mock data for now
-    setCollaborators([
-      {
-        id: currentUserId,
-        email: "you@example.com",
-        name: "You",
-        role: "owner",
-        is_online: true
-      }
-    ])
-  }
-
-  const loadChatMessages = async () => {
-    // TODO: Load from database
-    setChatMessages([])
-  }
-
-  const subscribeToPresence = () => {
     const channel = supabase
       .channel(`collab-${noteId}`)
       .on("presence", { event: "sync" }, () => {
@@ -112,9 +87,12 @@ export function CollaborationPanel({
     return () => {
       supabase.removeChannel(channel)
     }
-  }
+  }, [noteId, supabase])
 
-  const subscribeToChat = () => {
+  // Load chat messages and subscribe
+  useEffect(() => {
+    loadChatMessages()
+
     const channel = supabase
       .channel(`chat-${noteId}`)
       .on(
@@ -134,6 +112,25 @@ export function CollaborationPanel({
     return () => {
       supabase.removeChannel(channel)
     }
+  }, [noteId, supabase])
+
+  const loadCollaborators = async () => {
+    // TODO: Load from database
+    // Mock data for now
+    setCollaborators([
+      {
+        id: currentUserId,
+        email: "you@example.com",
+        name: "You",
+        role: "owner",
+        is_online: true
+      }
+    ])
+  }
+
+  const loadChatMessages = async () => {
+    // TODO: Load from database
+    setChatMessages([])
   }
 
   const handleSendMessage = async () => {
