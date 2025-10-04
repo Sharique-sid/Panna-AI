@@ -341,47 +341,23 @@ export function HomePage() {
               </p>
             </div>
 
-            <div className="relative max-w-7xl mx-auto">
-              <div className="rounded-3xl overflow-hidden shadow-2xl" style={{ 
-                backgroundColor: theme === 'dark' ? '#000000' : '#ffffff',
-                border: `2px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
-              }}>
-                <div className="flex items-center gap-3 px-6 py-4" style={{ 
-                  backgroundColor: theme === 'dark' ? '#171717' : '#f9f9f9',
-                  borderBottom: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
-                }}>
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff5f57' }}></div>
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ffbd2e' }}></div>
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#28ca42' }}></div>
-                  </div>
-                  <div className="flex-1 text-center">
-                    <span className="text-sm font-semibold" style={{ 
-                      color: theme === 'dark' ? '#ffffff' : '#000000',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Panna.ai - AI-Powered Notes</span>
-                  </div>
-                </div>
-                <div className="p-4 sm:p-8 flex justify-center bg-gradient-to-b from-transparent to-muted/20">
-                  <img 
-                    src="/demo.png" 
-                    alt="Panna.ai Dashboard - Three panel layout with notes, categories, and editor"
-                    className="max-w-full h-auto rounded-xl shadow-2xl border"
-                    style={{ 
-                      maxHeight: '600px',
-                      objectFit: 'contain',
-                      borderColor: theme === 'dark' ? '#333333' : '#e5e5e5'
-                    }}
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      if (!target.dataset.fallback) {
-                        target.dataset.fallback = '1';
-                        target.src = '/placeholder.svg';
-                      }
-                    }}
-                  />
-                </div>
-              </div>
+            <div className="relative max-w-7xl mx-auto px-4">
+              <img 
+                src="/demo.png" 
+                alt="Panna.ai Dashboard - Three panel layout with notes, categories, and editor"
+                className="w-full h-auto rounded-2xl shadow-2xl"
+                style={{ 
+                  maxHeight: '700px',
+                  objectFit: 'contain'
+                }}
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (!target.dataset.fallback) {
+                    target.dataset.fallback = '1';
+                    target.src = '/placeholder.svg';
+                  }
+                }}
+              />
             </div>
           </div>
 
