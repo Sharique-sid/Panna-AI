@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panna.ai - Quick Capture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 320px;
+      min-height: 180px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f5;
+      color: #000000;
+      margin: 0;
+      padding: 8px;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100%;
+      background: #ffffff;
+      border: none;
+      margin: 0;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .header {
+      background: #ffffff;
+      color: #000000;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #000000;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+
+    .mail-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #000000;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .mail-icon:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-logout {
+      background: transparent;
+      color: #e53e3e;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-logout:hover {
+      background: #fed7d7;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #e5e5e5;
+      border-top: 2px solid #000000;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .spinner-small {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #e5e5e5;
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #fed7d7;
+      color: #c53030;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      border: 1px solid #feb2b2;
+    }
+
+    .success {
+      background: #c6f6d5;
+      color: #2f855a;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      border: 1px solid #9ae6b4;
+    }
+
+    .login-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .login-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+
+    .login-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #000000;
+      margin: 0;
+    }
+
+    .login-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #000000;
+    }
+
+    .form-group input {
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 400;
+      color: #000000;
+      background: #ffffff;
+      transition: all 0.2s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #000000;
+      box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-group input::placeholder {
+      color: #9ca3af;
+    }
+
+    .password-input {
+      position: relative;
+    }
+
+    .password-input input {
+      padding-right: 40px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: #6b7280;
+      z-index: 1;
+    }
+
+    .password-toggle:hover {
+      color: #000000;
+    }
+
+    .eye-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-primary {
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      background: #1a1a1a;
+    }
+
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-google {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #000000;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-google:hover {
+      background: #f7f7f7;
+      border-color: #d1d5db;
+    }
+
+    .google-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .divider {
+      position: relative;
+      text-align: center;
+      margin: 16px 0;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e5e5e5;
+    }
+
+    .divider span {
+      background: #ffffff;
+      padding: 0 12px;
+      color: #666666;
+      font-size: 12px;
+    }
+
+    .btn-text {
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .btn-loader {
+      display: none;
+    }
+
+    .website-link {
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .website-link-text {
+      color: #6b7280;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .website-link-text:hover {
+      color: #000000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+        <div class="header" id="mainHeader" style="display: none;">
+          <div class="logo-container">
+            <img src="icons/logo.png" alt="Panna.ai" class="logo-img">
+            <h1>Panna.ai</h1>
+          </div>
+          <div class="header-actions">
+            <button class="btn-logout" id="logoutBtn" style="display: none;">Logout</button>
+            <div class="mail-icon" id="mailIcon" title="User Account" style="display: none;">M</div>
+          </div>
+        </div>
+
+    <div class="content">
+      <!-- Loading State -->
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 12px; color: #718096;">Loading...</p>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="error"></div>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="login-card">
+          <img src="icons/logo.png" alt="Panna.ai" class="login-logo">
+          <h1 class="login-title">Login</h1>
+          
+          <!-- Google Sign In Button -->
+          <button type="button" class="btn-google" id="googleSignInBtn">
+            <svg class="google-icon" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <!-- Divider -->
+          <div class="divider">
+            <span>or</span>
+          </div>
+          
+          <form id="loginFormElement" class="login-form">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="m@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="password-input">
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <button type="button" class="password-toggle" id="passwordToggle">
+                  <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary login-btn">
+              <span class="btn-text">Sign in</span>
+              <div class="btn-loader" style="display: none;">
+                <div class="spinner-small"></div>
+              </div>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Note Form -->
+      <div id="noteForm">
+
+        <form id="noteFormElement">
+          <div class="form-group">
+            <label for="noteTitle">Title</label>
+            <input 
+              type="text" 
+              id="noteTitle" 
+              name="title" 
+              placeholder="Note title (optional)"
+              autofocus
+            />
+          </div>
+          <div class="form-group">
+            <label for="noteContent">Content</label>
+            <textarea 
+              id="noteContent" 
+              name="content" 
+              placeholder="Start typing your note..."
+            ></textarea>
+          </div>
+          <div class="button-group">
+            <button type="submit" class="btn-primary">Save Note</button>
+          </div>
+        </form>
+
+        <div class="website-link">
+          <a href="https://panna.ai" target="_blank" class="website-link-text">panna.ai</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

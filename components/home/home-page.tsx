@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight, Moon, Sun, FileText, RefreshCw, Languages, Tag } from "lucide-react";
+import { Sparkles, ArrowRight, Moon, Sun, FileText, RefreshCw, Languages, Tag, Shield, Infinity } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Playfair_Display } from "next/font/google";
+import TestimonialsSection from "./testimonials-section";
+import { AnimatedSection } from "@/components/ui/animated-section";
+import { StaggeredGrid } from "@/components/ui/staggered-grid";
+import { AnimatedLogo } from "@/components/ui/animated-logo";
 
 // Font loaders must be at module scope
 const headingFont = Playfair_Display({ subsets: ["latin"], weight: ["400", "700"] });
@@ -125,7 +129,9 @@ export function HomePage() {
       <main className="relative z-10 container mx-auto px-6 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           {/* Hero section */}
+          <AnimatedSection animation="fadeIn" delay={200}>
           <div className="space-y-6">
+              <AnimatedSection animation="slideUp" delay={400}>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
                style={{ 
                  backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
@@ -135,20 +141,27 @@ export function HomePage() {
             <Sparkles className="h-4 w-4" />
             AI-Powered & Free Forever
           </div>
+              </AnimatedSection>
 
+              <AnimatedSection animation="slideUp" delay={600}>
             <h1 className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight text-foreground`}>
               <span>Smart Notes</span>
               <br />
               <span>Made Simple</span>
             </h1>
+              </AnimatedSection>
 
+              <AnimatedSection animation="slideUp" delay={800}>
             <p className="text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed text-muted-foreground">
               A beautiful, minimal note-taking app with AI-powered features.
               Completely free and open source.
             </p>
+              </AnimatedSection>
           </div>
+          </AnimatedSection>
 
           {/* CTA buttons */}
+          <AnimatedSection animation="scaleIn" delay={1000}>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
             <Button
               size="lg"
@@ -172,10 +185,16 @@ export function HomePage() {
               </Link>
             </Button>
           </div>
+          </AnimatedSection>
 
           {/* Features */}
-          <div id="features" className="grid md:grid-cols-3 gap-8 pt-20">
-            <div className="rounded-3xl p-8 text-center space-y-4" style={{ 
+          <AnimatedSection animation="slideUp" delay={200}>
+            <StaggeredGrid 
+              className="grid md:grid-cols-3 gap-8 pt-20" 
+              animation="scaleIn" 
+              staggerDelay={150}
+            >
+              <div className="rounded-3xl p-8 text-center space-y-4 flex flex-col h-full" style={{ 
               backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
               border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
             }}>
@@ -187,27 +206,27 @@ export function HomePage() {
                 color: theme === 'dark' ? '#ffffff' : '#000000',
                 fontFamily: 'Inter, sans-serif'
               }}>AI-Powered</h3>
-              <p style={{ 
+                <p className="flex-grow" style={{ 
                 color: theme === 'dark' ? '#f2f2f2' : '#666666',
                 fontFamily: 'Inter, sans-serif'
               }}>
-                Smart features to enhance your note-taking experience
+                  Smart features to enhance your notes
               </p>
             </div>
 
-            <div className="rounded-3xl p-8 text-center space-y-4" style={{ 
+            <div className="rounded-3xl p-8 text-center space-y-4 flex flex-col h-full" style={{ 
               backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
               border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
             }}>
               <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center" 
                    style={{ backgroundColor: '#000000' }}>
-                <Sparkles className="h-8 w-8" style={{ color: '#ffffff' }} />
+                <Shield className="h-8 w-8" style={{ color: '#ffffff' }} />
               </div>
               <h3 className="text-xl font-semibold" style={{ 
                 color: theme === 'dark' ? '#ffffff' : '#000000',
                 fontFamily: 'Inter, sans-serif'
               }}>Privacy First</h3>
-              <p style={{ 
+              <p className="flex-grow" style={{ 
                 color: theme === 'dark' ? '#f2f2f2' : '#666666',
                 fontFamily: 'Inter, sans-serif'
               }}>
@@ -215,29 +234,32 @@ export function HomePage() {
               </p>
             </div>
 
-            <div className="rounded-3xl p-8 text-center space-y-4" style={{ 
+            <div className="rounded-3xl p-8 text-center space-y-4 flex flex-col h-full" style={{ 
               backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
               border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
             }}>
               <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center" 
                    style={{ backgroundColor: '#000000' }}>
-                <span className="text-2xl font-bold" style={{ color: '#ffffff' }}>∞</span>
+                <Infinity className="h-8 w-8" style={{ color: '#ffffff' }} />
               </div>
               <h3 className="text-xl font-semibold" style={{ 
                 color: theme === 'dark' ? '#ffffff' : '#000000',
                 fontFamily: 'Inter, sans-serif'
               }}>Free Forever</h3>
-              <p style={{ 
+              <p className="flex-grow" style={{ 
                 color: theme === 'dark' ? '#f2f2f2' : '#666666',
                 fontFamily: 'Inter, sans-serif'
               }}>
-                No subscriptions, no limits, no hidden costs
+                No subscriptions, no limits, no costs
               </p>
             </div>
-          </div>
+            </StaggeredGrid>
+          </AnimatedSection>
 
           {/* AI Use Cases Section */}
+          <AnimatedSection animation="slideUp" delay={200}>
           <div id="use-cases" className="pt-20">
+              <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
                 AI-Powered Features
@@ -246,8 +268,13 @@ export function HomePage() {
                 Transform your notes with intelligent AI tools designed to enhance productivity
               </p>
             </div>
+              </AnimatedSection>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StaggeredGrid 
+                className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" 
+                animation="slideUp" 
+                staggerDelay={100}
+              >
             <div className="rounded-2xl p-6 text-center space-y-4" style={{ 
                 backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
                 border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
@@ -327,11 +354,14 @@ export function HomePage() {
                   Automatically generate relevant tags for organization
                 </p>
               </div>
+              </StaggeredGrid>
             </div>
-          </div>
+          </AnimatedSection>
 
           {/* Dashboard Preview Section */}
+          <AnimatedSection animation="slideUp" delay={200}>
           <div id="preview" className="pt-20">
+              <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
                 Clean & Intuitive Interface
@@ -340,7 +370,9 @@ export function HomePage() {
                 Experience a three-panel layout with sidebar, notes list, and rich text editor
               </p>
             </div>
+              </AnimatedSection>
 
+              <AnimatedSection animation="scaleIn" delay={600}>
             <div className="relative max-w-7xl mx-auto px-4">
               <img 
                 src="/demo.png" 
@@ -359,123 +391,17 @@ export function HomePage() {
                 }}
               />
             </div>
-          </div>
-
-          {/* Testimonials Section */}
-          <div id="reviews" className="pt-20">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
-                Loved by Users
-              </h2>
-              <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
-                See what our community has to say about Panna.ai
-              </p>
+              </AnimatedSection>
             </div>
+          </AnimatedSection>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="rounded-2xl p-6" style={{ 
-                backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
-                border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
-              }}>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-yellow-400">⭐</span>
-                  ))}
-                </div>
-                <p className="mb-4" style={{ 
-                  color: theme === 'dark' ? '#f2f2f2' : '#666666',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  "The AI features are incredible! I can summarize long research papers in seconds and translate my notes to multiple languages. It's like having a personal assistant for my notes."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" 
-                       style={{ backgroundColor: '#000000' }}>
-                    <span className="text-white font-bold">S</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold" style={{ 
-                      color: theme === 'dark' ? '#ffffff' : '#000000',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Sarah Chen</div>
-                    <div className="text-sm" style={{ 
-                      color: theme === 'dark' ? '#f2f2f2' : '#666666',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Research Scientist</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl p-6" style={{ 
-                backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
-                border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
-              }}>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-yellow-400">⭐</span>
-                  ))}
-                </div>
-                <p className="mb-4" style={{ 
-                  color: theme === 'dark' ? '#f2f2f2' : '#666666',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  "Clean interface, powerful features, and completely free. This is exactly what I needed for organizing my study notes. The rephrasing tool helps me understand complex concepts better."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" 
-                       style={{ backgroundColor: '#000000' }}>
-                    <span className="text-white font-bold">M</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold" style={{ 
-                      color: theme === 'dark' ? '#ffffff' : '#000000',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Marcus Johnson</div>
-                    <div className="text-sm" style={{ 
-                      color: theme === 'dark' ? '#f2f2f2' : '#666666',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Student</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl p-6" style={{ 
-                backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
-                border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
-              }}>
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-yellow-400">⭐</span>
-                  ))}
-                </div>
-                <p className="mb-4" style={{ 
-                  color: theme === 'dark' ? '#f2f2f2' : '#666666',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  "As a writer, I love how I can quickly rephrase my content in different styles. The privacy-first approach gives me confidence that my ideas stay secure. Highly recommended!"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" 
-                       style={{ backgroundColor: '#000000' }}>
-                    <span className="text-white font-bold">A</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold" style={{ 
-                      color: theme === 'dark' ? '#ffffff' : '#000000',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Alex Rivera</div>
-                    <div className="text-sm" style={{ 
-                      color: theme === 'dark' ? '#f2f2f2' : '#666666',
-                      fontFamily: 'Inter, sans-serif'
-                    }}>Content Writer</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Interactive Testimonials Section */}
+          <TestimonialsSection />
 
           {/* Final CTA Section */}
+          <AnimatedSection animation="slideUp" delay={200}>
           <div id="cta" className="pt-20">
+              <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center">
               <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
                 Ready to Transform
@@ -486,6 +412,10 @@ export function HomePage() {
                 Join thousands of users who are already using AI to enhance their productivity. 
                 Start taking smarter notes today.
               </p>
+                </div>
+              </AnimatedSection>
+
+              <AnimatedSection animation="scaleIn" delay={600}>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   size="lg"
@@ -513,8 +443,9 @@ export function HomePage() {
                   </Link>
                 </Button>
               </div>
+              </AnimatedSection>
             </div>
-          </div>
+          </AnimatedSection>
         </div>
       </main>
 
@@ -548,6 +479,9 @@ export function HomePage() {
           
         </div>
       </footer>
+
+      {/* Animated Logo */}
+      <AnimatedLogo />
     </div>
   );
 }

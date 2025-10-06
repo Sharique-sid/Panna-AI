@@ -448,13 +448,16 @@ export const useNotesStore = create<NotesStore>()(
       storage: {
         getItem: (name: string) => {
           try {
+            // Check if we're in browser environment
+            if (typeof window === 'undefined') {
+              return null;
+            }
+            
             // Check if we're in bypass mode
-            if (typeof window !== 'undefined') {
-              if (window.location.pathname.includes('force-clear') || 
-                  window.location.pathname.includes('bypass-storage') ||
-                  sessionStorage.getItem('bypass-persistence') === 'true') {
-                return null;
-              }
+            if (window.location.pathname.includes('force-clear') || 
+                window.location.pathname.includes('bypass-storage') ||
+                sessionStorage.getItem('bypass-persistence') === 'true') {
+              return null;
             }
             
             const item = localStorage.getItem(name);
@@ -471,8 +474,13 @@ export const useNotesStore = create<NotesStore>()(
         },
         setItem: (name: string, value: string) => {
           try {
+            // Check if we're in browser environment
+            if (typeof window === 'undefined') {
+              return;
+            }
+            
             // Check if we're in bypass mode
-            if (typeof window !== 'undefined' && sessionStorage.getItem('bypass-persistence') === 'true') {
+            if (sessionStorage.getItem('bypass-persistence') === 'true') {
               return; // Don't save anything in bypass mode
             }
             
@@ -487,7 +495,9 @@ export const useNotesStore = create<NotesStore>()(
         },
         removeItem: (name: string) => {
           try {
-            localStorage.removeItem(name);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem(name);
+            }
           } catch (error) {
             console.error("Error removing from storage:", error);
           }
