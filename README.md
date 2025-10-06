@@ -240,7 +240,6 @@ This project is developed by **Hasnain** as a modern, AI-powered note-taking sol
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
 ---
 
 ## 📞 Support
