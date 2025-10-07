@@ -146,14 +146,15 @@ export function AnimatedLogo({ onLogoClick }: AnimatedLogoProps) {
   // Listen for scroll events to trigger falling again
   useEffect(() => {
     const handleScroll = () => {
-      if (isAtRest && window.scrollY > 100) {
+      // Don't fall if FAQ bot is open - let users read/use it without interruption
+      if (isAtRest && !showFAQ && window.scrollY > 100) {
         startFalling();
       }
     };
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isAtRest]);
+  }, [isAtRest, showFAQ]);
 
   const handleLogoClick = () => {
     if (onLogoClick) {
@@ -187,6 +188,24 @@ export function AnimatedLogo({ onLogoClick }: AnimatedLogoProps) {
       setTimeout(() => {
         scrollToBottom();
       }, 100);
+    }
+  }, [showFAQ]);
+
+  // Close FAQ bot when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showFAQ && logoRef.current && !logoRef.current.contains(event.target as Node)) {
+        // Check if click is not on the FAQ popup itself
+        const faqPopup = document.querySelector('[data-faq-popup]');
+        if (faqPopup && !faqPopup.contains(event.target as Node)) {
+          setShowFAQ(false);
+        }
+      }
+    };
+
+    if (showFAQ) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showFAQ]);
 
@@ -300,7 +319,7 @@ export function AnimatedLogo({ onLogoClick }: AnimatedLogoProps) {
               className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium whitespace-nowrap"
               style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}
             >
-              {showFAQ ? 'Click to close' : 'Click me!'}
+              {showFAQ ? 'Click outside to close' : 'Click me!'}
             </div>
           )}
         </div>
@@ -315,6 +334,7 @@ export function AnimatedLogo({ onLogoClick }: AnimatedLogoProps) {
               top: `${Math.min(Math.max(position.y - 150, 20), window.innerHeight - 420)}px`
             }}>
           <div 
+            data-faq-popup
             className="rounded-2xl shadow-2xl w-80 max-h-96 overflow-hidden border"
             style={{
               backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
