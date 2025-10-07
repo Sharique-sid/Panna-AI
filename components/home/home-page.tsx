@@ -144,7 +144,7 @@ export function HomePage() {
               </AnimatedSection>
 
               <AnimatedSection animation="slideUp" delay={600}>
-            <h1 className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight text-foreground`}>
+            <h1 className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight text-black dark:text-white`}>
               <span>Smart Notes</span>
               <br />
               <span>Made Simple</span>
@@ -261,7 +261,7 @@ export function HomePage() {
           <div id="use-cases" className="pt-20">
               <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">
                 AI-Powered Features
               </h2>
               <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
@@ -363,7 +363,7 @@ export function HomePage() {
           <div id="preview" className="pt-20">
               <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">
                 Clean & Intuitive Interface
               </h2>
               <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
@@ -403,7 +403,7 @@ export function HomePage() {
           <div id="extension" className="pt-20">
               <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-black dark:text-white">
                 Capture Notes Anywhere
               </h2>
               <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
@@ -527,7 +527,7 @@ export function HomePage() {
           <div id="cta" className="pt-20">
               <AnimatedSection animation="fadeIn" delay={400}>
             <div className="text-center">
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+              <h2 className="text-4xl md:text-6xl font-bold mb-6 text-black dark:text-white">
                 Ready to Transform
                 <br />
                 <span>Your Notes?</span>
