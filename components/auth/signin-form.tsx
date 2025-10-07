@@ -96,7 +96,7 @@ export function SignInForm({
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/auth/callback?extension=true`
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback?extension=true`
           }
         });
 
@@ -115,7 +115,7 @@ export function SignInForm({
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/auth/callback`
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
           }
         });
 
