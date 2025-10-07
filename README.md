@@ -1,7 +1,5 @@
 # Panna.ai – AI-Powered Note Taking App
 
-![Panna.ai Banner](./public/opengraph-image.png)
-
 A modern, full-stack note-taking application with AI capabilities, real-time synchronization, browser extension, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
 ---
