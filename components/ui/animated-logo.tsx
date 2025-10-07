@@ -246,10 +246,10 @@ export function AnimatedLogo({ onLogoClick }: AnimatedLogoProps) {
 
   return (
     <>
-      {/* Animated Logo */}
+      {/* Animated Logo - Desktop Only */}
       <div
         ref={logoRef}
-        className={`fixed z-50 cursor-pointer transition-all duration-300 ${
+        className={`hidden md:block fixed z-50 cursor-pointer transition-all duration-300 ${
           isAtRest ? 'hover:scale-110' : ''
         }`}
         style={{
