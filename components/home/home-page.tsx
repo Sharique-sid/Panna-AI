@@ -485,16 +485,33 @@ export function HomePage() {
                     <Button
                       size="lg"
                       className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90"
-                      onClick={() => {
-                        // Download extension package
-                        const link = document.createElement('a');
-                        link.href = 'https://github.com/mdtaufique-alam/Panna.ai/archive/refs/heads/main.zip';
-                        link.download = 'panna-ai-extension.zip';
-                        link.click();
-                        
-                        // Show installation instructions
-                        alert('Extension downloaded! Please extract the ZIP file, go to the "extension" folder, and follow the installation guide in INSTALL.md');
-                      }}
+                       onClick={() => {
+                         // Direct download of extension package
+                         const link = document.createElement('a');
+                         link.href = '/panna-ai-extension.zip';
+                         link.download = 'panna-ai-extension.zip';
+                         link.click();
+                         
+                         // Show installation instructions
+                         setTimeout(() => {
+                           alert(`🚀 Extension Downloaded Successfully!
+
+📁 Next Steps:
+1. Extract the downloaded ZIP file
+2. Open Chrome and go to: chrome://extensions/
+3. Enable "Developer mode" (toggle in top right)
+4. Click "Load unpacked"
+5. Select the extracted extension folder
+6. Extension is now installed! 🎉
+
+✅ Start Using:
+• Click the Panna.ai icon in your browser
+• Sign in with your Google account
+• Start capturing notes from any website!
+
+Need help? Visit: https://panna-ai-bice.vercel.app/`);
+                         }, 1000);
+                       }}
                     >
                       Download Extension
                       <ArrowRight className="ml-2 h-4 w-4" />
