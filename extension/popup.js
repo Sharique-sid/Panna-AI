@@ -40,6 +40,8 @@ function init() {
       console.log('Supabase script not loaded, falling back to mock mode');
       MOCK_MODE = true;
     }
+    
+    console.log('MOCK_MODE set to:', MOCK_MODE);
 
     // Get DOM elements
     loginForm = document.getElementById('loginForm');
@@ -58,6 +60,12 @@ function init() {
   noteFormElement.addEventListener('submit', handleSaveNote);
   logoutBtn.addEventListener('click', handleLogout);
   mailIcon.addEventListener('click', handleMailClick);
+  
+  // Google sign-in button
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
+  if (googleSignInBtn) {
+    googleSignInBtn.addEventListener('click', handleGoogleSignIn);
+  }
   
   // Password toggle functionality
   const passwordToggle = document.getElementById('passwordToggle');
@@ -251,6 +259,49 @@ async function handleLogin(e) {
       btnText.style.opacity = '1';
       btnLoader.style.display = 'none';
     }
+  }
+}
+
+// Handle Google sign-in
+async function handleGoogleSignIn() {
+  try {
+    console.log('Google sign-in clicked');
+    
+    if (MOCK_MODE) {
+      // Mock Google sign-in
+      const mockSession = {
+        access_token: 'mock_google_token_' + Date.now(),
+        user: {
+          email: 'user@gmail.com',
+          id: 'mock_google_user_' + Date.now()
+        }
+      };
+      
+      await saveSession(mockSession);
+      showNoteForm('user@gmail.com');
+      updateMailIcon();
+      return;
+    }
+
+    // Real Google OAuth
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'http://localhost:3000/auth/callback'
+      }
+    });
+
+    if (error) {
+      showError(error.message);
+      return;
+    }
+
+    // The OAuth flow will redirect to the main app
+    // User will need to come back to extension after auth
+    
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    showError("Failed to sign in with Google");
   }
 }
 
