@@ -310,19 +310,19 @@ export function NotesList({
                     )}
                     <div className="flex-1 min-w-0 space-y-2">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium truncate">
+                        <h3 className="font-medium break-words">
                           {note.title || "Untitled"}
                         </h3>
                       </div>
 
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed break-words">
                         {note.content?.replace(/[#*`]/g, "").replace(/!\[.*?\]\(.*?\)/g, "").replace(/<!-- Images -->.*$/s, "").trim() || "No content"}
                       </p>
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span className="truncate">
+                          <span className="break-words">
                             {formatDistanceToNow(new Date(note.updatedAt), {
                               addSuffix: true,
                             })}
