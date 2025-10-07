@@ -12,7 +12,7 @@
     "identity"
   ],
   "host_permissions": [
-    "http://localhost:3000/*",
+    "https://panna-ai-bice.vercel.app/*",
     "https://*.panna.ai/*",
     "https://iuvvmbtqbaauvtojnxjd.supabase.co/*"
   ],

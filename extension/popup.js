@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = 'http://localhost:3000'; // Next.js development server
+const API_URL = 'https://panna-ai-bice.vercel.app'; // Production Vercel URL
 const SUPABASE_URL = 'https://iuvvmbtqbaauvtojnxjd.supabase.co'; // Your Supabase URL
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1dnZtYnRxYmFhdXZ0b2pueGpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDI0NTEsImV4cCI6MjA3NDk3ODQ1MX0.v2oCR6JXGF5NBJ_PYDHT1X1BowDewDWYR7_Fu1Tbs7U'; // Your Supabase anon key
 
@@ -168,7 +168,7 @@ async function checkAuth() {
         
         // Check if user is signed in on the main website
         try {
-          const response = await fetch('http://localhost:3000/api/auth/check-session', {
+          const response = await fetch('https://panna-ai-bice.vercel.app/api/auth/check-session', {
             method: 'GET',
             credentials: 'include'
           });
@@ -331,7 +331,7 @@ async function handleGoogleSignIn() {
     
     // Create a popup window for Google OAuth
     const popup = window.open(
-      'http://localhost:3000/auth/signin?extension=true',
+      'https://panna-ai-bice.vercel.app/auth/signin?extension=true',
       'google-auth',
       'width=500,height=600,scrollbars=yes,resizable=yes'
     );
@@ -353,7 +353,7 @@ async function handleGoogleSignIn() {
       console.log('Message origin:', event.origin);
       console.log('Message data:', event.data);
       
-      if (event.origin !== 'http://localhost:3000') {
+      if (event.origin !== 'https://panna-ai-bice.vercel.app') {
         console.log('Ignoring message from different origin');
         return;
       }
@@ -579,7 +579,7 @@ async function handleSaveNote(e) {
       console.log('Main app server status:', healthCheck.status);
     } catch (error) {
       console.log('Main app server not reachable:', error);
-      throw new Error('Main app server is not running. Please start the server at localhost:3000');
+      throw new Error('Main app server is not running. Please check your Vercel deployment.');
     }
 
     // Call the notes API endpoint
@@ -697,7 +697,7 @@ async function checkMainAppSession() {
   // Check if there's a session in the main app's localStorage
   // This allows sharing sessions between the main app and extension
   return new Promise((resolve) => {
-    chrome.tabs.query({ url: 'http://localhost:3000/*' }, (tabs) => {
+    chrome.tabs.query({ url: 'https://panna-ai-bice.vercel.app/*' }, (tabs) => {
       if (tabs.length > 0) {
         // Execute script in the main app tab to get session
         chrome.scripting.executeScript({

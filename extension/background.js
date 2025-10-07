@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = 'http://localhost:3000'; // Next.js development server
+const API_URL = 'https://panna-ai-bice.vercel.app'; // Production Vercel URL
 const SUPABASE_URL = 'https://iuvvmbtqbaauvtojnxjd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1dnZtYnRxYmFhdXZ0b2pueGpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDI0NTEsImV4cCI6MjA3NDk3ODQ1MX0.v2oCR6JXGF5NBJ_PYDHT1X1BowDewDWYR7_Fu1Tbs7U';
 const MOCK_MODE = false; // Set to true for testing without backend
@@ -197,10 +197,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
   if (notificationId === 'noteSavedSuccess' && buttonIndex === 0) {
     // Open dashboard in new tab
-    chrome.tabs.create({ url: 'http://localhost:3000/dashboard' });
+    chrome.tabs.create({ url: 'https://panna-ai-bice.vercel.app/dashboard' });
   } else if (notificationId === 'noteSavedMock' && buttonIndex === 0) {
     // Open dashboard in new tab (mock mode)
-    chrome.tabs.create({ url: 'http://localhost:3000/dashboard' });
+    chrome.tabs.create({ url: 'https://panna-ai-bice.vercel.app/dashboard' });
   } else if (notificationId === 'pannaNotLoggedIn' && buttonIndex === 0) {
     // Open extension popup
     chrome.action.openPopup();
