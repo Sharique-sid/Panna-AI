@@ -485,12 +485,19 @@ export function HomePage() {
                     <Button
                       size="lg"
                       className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90"
-                      asChild
+                      onClick={() => {
+                        // Download extension package
+                        const link = document.createElement('a');
+                        link.href = 'https://github.com/mdtaufique-alam/Panna.ai/archive/refs/heads/main.zip';
+                        link.download = 'panna-ai-extension.zip';
+                        link.click();
+                        
+                        // Show installation instructions
+                        alert('Extension downloaded! Please extract the ZIP file, go to the "extension" folder, and follow the installation guide in INSTALL.md');
+                      }}
                     >
-                      <Link href="/auth/signup">
-                        Install Extension
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
+                      Download Extension
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                     <Button
                       size="lg"

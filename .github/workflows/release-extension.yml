@@ -1,0 +1,72 @@
+name: Release Browser Extension
+
+on:
+  push:
+    tags:
+      - 'extension-v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install archiver
+      
+    - name: Package extension
+      run: |
+        mkdir -p scripts
+        node scripts/package-extension.js
+        
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Panna.ai Extension ${{ github.ref_name }}
+        body: |
+          ## 🚀 Panna.ai Browser Extension
+          
+          ### What's New:
+          - Quick note capture from any website
+          - Seamless integration with Panna.ai dashboard
+          - Google OAuth authentication
+          - Real-time sync with your notes
+          
+          ### Installation:
+          1. Download the `panna-ai-extension.zip` file below
+          2. Extract the ZIP file
+          3. Open Chrome and go to `chrome://extensions/`
+          4. Enable "Developer mode"
+          5. Click "Load unpacked" and select the extracted folder
+          
+          ### Features:
+          - 📝 Capture text from any website
+          - 🔗 Save links with notes
+          - 📸 Screenshot capture
+          - 🔄 Real-time sync
+          - 🔐 Secure authentication
+          
+          **Download the extension and start capturing notes instantly!**
+        draft: false
+        prerelease: false
+        
+    - name: Upload Extension Package
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./panna-ai-extension.zip
+        asset_name: panna-ai-extension.zip
+        asset_content_type: application/zip
