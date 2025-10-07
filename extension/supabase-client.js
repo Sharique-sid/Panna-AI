@@ -36,13 +36,14 @@ class SupabaseAuth {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        return { data: null, error };
+        const errorData = await response.json();
+        console.log('Supabase auth error:', errorData);
+        return { data: null, error: errorData };
       }
 
       const data = await response.json();
       this.session = data;
-      return { data, error: null };
+      return { data: { session: data, user: data.user }, error: null };
     } catch (error) {
       return { data: null, error };
     }
@@ -60,6 +61,9 @@ class SupabaseAuth {
   }
 
   async getSession() {
+    if (!this.session) {
+      return { data: { session: null }, error: null };
+    }
     return { data: { session: this.session }, error: null };
   }
 

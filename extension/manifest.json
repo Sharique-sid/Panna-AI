@@ -7,7 +7,9 @@
     "storage",
     "contextMenus",
     "activeTab",
-    "notifications"
+    "notifications",
+    "scripting",
+    "identity"
   ],
   "host_permissions": [
     "http://localhost:3000/*",
@@ -25,6 +27,13 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "run_at": "document_end"
+    }
+  ],
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -32,6 +41,10 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "oauth2": {
+    "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": ["openid", "email", "profile"]
   }
 }
 

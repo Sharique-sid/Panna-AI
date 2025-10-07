@@ -15,6 +15,37 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('Panna.ai extension installed successfully!');
 });
 
+// Inject content script to handle double-click events
+chrome.runtime.onInstalled.addListener(() => {
+  // Inject content script into all tabs
+  chrome.tabs.query({}, (tabs) => {
+    tabs.forEach(tab => {
+      if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['content-script.js']
+        }).catch(() => {
+          // Ignore errors for tabs that can't be scripted
+        });
+      }
+    });
+  });
+});
+
+// Inject content script into new tabs
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url && 
+      !tab.url.startsWith('chrome://') && 
+      !tab.url.startsWith('chrome-extension://')) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      files: ['content-script.js']
+    }).catch(() => {
+      // Ignore errors for tabs that can't be scripted
+    });
+  }
+});
+
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'saveToPanna' && info.selectionText) {
@@ -138,11 +169,25 @@ function clearSession() {
   });
 }
 
-// Listen for messages from popup (optional)
+// Listen for messages from popup and content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'checkAuth') {
     getSession().then(session => {
       sendResponse({ authenticated: !!session });
+    });
+    return true; // Keep channel open for async response
+  }
+  
+  if (request.action === 'saveSelectedText') {
+    // Handle double-click save from content script
+    saveSelection(request.text, {
+      title: request.title,
+      url: request.url
+    }).then(() => {
+      sendResponse({ success: true });
+    }).catch((error) => {
+      console.error('Error saving selected text:', error);
+      sendResponse({ success: false, error: error.message });
     });
     return true; // Keep channel open for async response
   }

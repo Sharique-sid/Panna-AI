@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
 });
 
-function init() {
+async function init() {
   try {
     // Initialize Supabase client
     if (window.supabase) {
@@ -35,13 +35,35 @@ function init() {
         }
       });
       console.log('Supabase client initialized successfully');
+      console.log('Supabase URL:', SUPABASE_URL);
+      console.log('Supabase Key (first 20 chars):', SUPABASE_ANON_KEY.substring(0, 20) + '...');
       MOCK_MODE = false;
+
+      // RESTORE SESSION ON STARTUP - This is the key fix!
+      const storedSession = await getSession();
+      if (storedSession && storedSession.access_token) {
+        console.log('Restoring session from storage...', storedSession);
+        // This command tells the Supabase client to load the stored session
+        const { data, error } = await supabase.auth.setSession(storedSession);
+        if (error) {
+          console.error('Failed to restore session:', error);
+        } else {
+          console.log('Session restored for Supabase client.');
+        }
+      } else {
+        console.log('No valid session found in storage');
+      }
     } else {
       console.log('Supabase script not loaded, falling back to mock mode');
       MOCK_MODE = true;
     }
     
     console.log('MOCK_MODE set to:', MOCK_MODE);
+
+    // Test Supabase connection
+    if (!MOCK_MODE && supabase) {
+      testSupabaseConnection();
+    }
 
     // Get DOM elements
     loginForm = document.getElementById('loginForm');
@@ -134,46 +156,53 @@ async function checkAuth() {
         console.log('No mock session, showing login form');
       }
     } else {
-      // Real mode - check stored session first, then Supabase
-      console.log('Real mode: checking stored session...');
-      const storedSession = await getSession();
-      
-      if (storedSession && storedSession.access_token) {
-        console.log('Stored session found, validating with Supabase...');
+      // Real mode: The client now has the session, so just get it
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (session && !error) {
+        console.log('Valid session confirmed, showing note form');
+        showNoteForm(session.user.email);
+        updateMailIcon();
+      } else {
+        console.log('No valid session in extension, checking main site...');
+        
+        // Check if user is signed in on the main website
         try {
-          // Set the session in Supabase client
-          await supabase.auth.setSession(storedSession);
+          const response = await fetch('http://localhost:3000/api/auth/check-session', {
+            method: 'GET',
+            credentials: 'include'
+          });
           
-          // Verify the session is still valid
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
-          if (session && !error) {
-            console.log('Valid session confirmed, showing note form');
-            showNoteForm(session.user.email);
-            updateMailIcon();
-            hideLoading();
-            return;
-          } else {
-            console.log('Stored session invalid, clearing and showing login');
-            await clearSession();
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+              console.log('User is signed in on main site, syncing session');
+              // Create a session object from the user data
+              const sessionData = {
+                access_token: data.session?.access_token || 'main_site_session_' + Date.now(),
+                refresh_token: data.session?.refresh_token || null,
+                user: data.user
+              };
+              await saveSession(sessionData);
+              showNoteForm(data.user.email);
+              updateMailIcon();
+              return;
+            }
           }
         } catch (error) {
-          console.log('Error validating stored session:', error);
-          await clearSession();
+          console.log('Could not check main site session:', error);
         }
+        
+        console.log('No session found anywhere, showing login form');
+        await clearSession(); // Clear any invalid stored session
+        showLoginForm();
       }
-      
-      console.log('No valid session, showing login form');
     }
-    
-    // Show login form if no valid session
-    console.log('Showing login form');
-    hideLoading();
-    showLoginForm();
   } catch (error) {
     console.error('Auth check error:', error);
-    hideLoading();
     showLoginForm();
+  } finally {
+    hideLoading();
   }
   
   // Fallback timeout - if still loading after 3 seconds, show login form
@@ -184,6 +213,17 @@ async function checkAuth() {
       showLoginForm();
     }
   }, 3000);
+}
+
+// Test Supabase connection
+async function testSupabaseConnection() {
+  try {
+    console.log('Testing Supabase connection...');
+    const { data, error } = await supabase.auth.getSession();
+    console.log('Supabase connection test result:', { data, error });
+  } catch (error) {
+    console.log('Supabase connection test failed:', error);
+  }
 }
 
 // Handle login
@@ -232,15 +272,18 @@ async function handleLogin(e) {
       console.log('Login result:', { data, error });
 
       if (error) {
-        throw new Error(error.message || 'Login failed');
+        console.log('Login error details:', error);
+        throw new Error(error.message || error.msg || 'Login failed');
       }
 
-      if (data.session) {
+      if (data && data.session) {
         console.log('Login successful, saving session and showing note form');
+        console.log('Session data:', data.session);
         await saveSession(data.session);
         showNoteForm(email);
         updateMailIcon();
       } else {
+        console.log('No session in data:', data);
         throw new Error('No session returned');
       }
     }
@@ -283,21 +326,64 @@ async function handleGoogleSignIn() {
       return;
     }
 
-    // Real Google OAuth
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'http://localhost:3000/auth/callback'
-      }
-    });
-
-    if (error) {
-      showError(error.message);
+    // Show loading state
+    showError('Signing in with Google...');
+    
+    // Create a popup window for Google OAuth
+    const popup = window.open(
+      'http://localhost:3000/auth/signin?extension=true',
+      'google-auth',
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    if (!popup) {
+      showError('Please allow popups for Google sign-in');
       return;
     }
-
-    // The OAuth flow will redirect to the main app
-    // User will need to come back to extension after auth
+    
+    // Set a timeout to clean up if no response is received
+    const timeout = setTimeout(() => {
+      window.removeEventListener('message', messageListener);
+      showError('Google sign-in timed out. Please try again.');
+    }, 60000); // 60 second timeout
+    
+    // Listen for messages from the popup
+    const messageListener = (event) => {
+      console.log('Extension received message:', event);
+      console.log('Message origin:', event.origin);
+      console.log('Message data:', event.data);
+      
+      if (event.origin !== 'http://localhost:3000') {
+        console.log('Ignoring message from different origin');
+        return;
+      }
+      
+      if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        console.log('Received auth success from popup');
+        console.log('Session data:', event.data.session);
+        clearTimeout(timeout);
+        window.removeEventListener('message', messageListener);
+        
+        // Save the session
+        saveSession(event.data.session).then(() => {
+          showNoteForm(event.data.session.user.email);
+          updateMailIcon();
+          console.log('Google sign-in successful');
+        }).catch(error => {
+          console.error('Error saving session:', error);
+          showError('Failed to save session');
+        });
+      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+        console.error('Auth error from popup:', event.data.error);
+        clearTimeout(timeout);
+        window.removeEventListener('message', messageListener);
+        showError('Google sign-in failed: ' + event.data.error);
+      } else {
+        console.log('Unknown message type:', event.data.type);
+      }
+    };
+    
+    window.addEventListener('message', messageListener);
     
   } catch (error) {
     console.error('Google sign-in error:', error);
@@ -307,10 +393,53 @@ async function handleGoogleSignIn() {
 
 // Handle logout
 async function handleLogout() {
-  if (confirm('Are you sure you want to logout?')) {
+  showLogoutConfirmation();
+}
+
+// Show custom logout confirmation dialog
+function showLogoutConfirmation() {
+  // Remove any existing confirmation dialog
+  const existingDialog = document.querySelector('.logout-confirmation');
+  if (existingDialog) {
+    existingDialog.remove();
+  }
+  
+  // Create confirmation dialog
+  const dialog = document.createElement('div');
+  dialog.className = 'logout-confirmation';
+  dialog.innerHTML = `
+    <div class="confirmation-overlay">
+      <div class="confirmation-dialog">
+        <div class="confirmation-title">Logout</div>
+        <div class="confirmation-message">Are you sure you want to logout?</div>
+        <div class="confirmation-buttons">
+          <button class="btn-cancel" id="cancelLogout">Cancel</button>
+          <button class="btn-confirm" id="confirmLogout">Logout</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add to container
+  document.querySelector('.container').appendChild(dialog);
+  
+  // Add event listeners
+  document.getElementById('cancelLogout').addEventListener('click', () => {
+    dialog.remove();
+  });
+  
+  document.getElementById('confirmLogout').addEventListener('click', async () => {
     await clearSession();
     showLoginForm();
-  }
+    dialog.remove();
+  });
+  
+  // Close on overlay click
+  dialog.querySelector('.confirmation-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      dialog.remove();
+    }
+  });
 }
 
 // Handle mail icon click
@@ -341,20 +470,20 @@ function showUserTooltip(message) {
     <div style="font-size: 11px; opacity: 0.9;">${message}</div>
   `;
   
-  // Add tooltip styles
+  // Add tooltip styles - positioned to stay within extension bounds
   tooltip.style.cssText = `
     position: absolute;
-    top: 50px;
+    top: 35px;
     right: 8px;
     background: #000000;
     color: white;
-    padding: 10px 12px;
-    border-radius: 8px;
-    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 500;
     z-index: 1000;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    max-width: 180px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    max-width: 160px;
     word-wrap: break-word;
     border: 1px solid rgba(255, 255, 255, 0.1);
     animation: fadeIn 0.2s ease-out;
@@ -426,13 +555,37 @@ async function handleSaveNote(e) {
     }
 
     // Get current session
+    console.log('Getting session from Supabase client...');
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('Session result:', { session: !!session, error: !!sessionError });
+    
+    if (session) {
+      console.log('Session details:', {
+        hasAccessToken: !!session.access_token,
+        accessTokenPreview: session.access_token ? session.access_token.substring(0, 20) + '...' : 'NO_TOKEN',
+        hasUser: !!session.user,
+        userEmail: session.user ? session.user.email : 'NO_USER'
+      });
+    }
 
     if (!session || sessionError) {
+      console.error('Session error:', sessionError);
       throw new Error('Not authenticated');
     }
 
+    // First check if the main app server is running
+    try {
+      const healthCheck = await fetch(`${API_URL}/api/test`);
+      console.log('Main app server status:', healthCheck.status);
+    } catch (error) {
+      console.log('Main app server not reachable:', error);
+      throw new Error('Main app server is not running. Please start the server at localhost:3000');
+    }
+
     // Call the notes API endpoint
+    console.log('Making API call to:', `${API_URL}/api/notes/create`);
+    console.log('Session token (first 20 chars):', session.access_token.substring(0, 20) + '...');
+    
     const response = await fetch(`${API_URL}/api/notes/create`, {
       method: 'POST',
       headers: {
@@ -444,6 +597,9 @@ async function handleSaveNote(e) {
         content 
       }),
     });
+    
+    console.log('API response status:', response.status);
+    console.log('API response headers:', response.headers);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -453,6 +609,15 @@ async function handleSaveNote(e) {
       } catch {
         throw new Error(`Server error: ${response.status}`);
       }
+      
+      // Handle expired token specifically
+      if (errorData.code === 'bad_jwt' || errorData.error?.includes('expired')) {
+        console.log('Token expired, clearing session and showing login form');
+        await clearSession();
+        showLoginForm();
+        throw new Error('Your session has expired. Please log in again.');
+      }
+      
       throw new Error(errorData.error || 'Failed to save note');
     }
 
@@ -461,6 +626,20 @@ async function handleSaveNote(e) {
     noteTitle.value = '';
     noteContent.value = '';
     noteTitle.focus();
+    
+    // Show success message with note details
+    showMessage(`📝 Note saved: "${data.note.title}"`, 'success');
+    
+    // Show notification if available
+    if (chrome.notifications) {
+      chrome.notifications.create('noteSaved', {
+        type: 'basic',
+        iconUrl: 'icons/icon-48.png',
+        title: 'Panna.ai - Note Saved!',
+        message: `"${data.note.title}" has been added to your dashboard`,
+        priority: 1
+      });
+    }
   } catch (error) {
     console.error('Save note error:', error);
 
@@ -510,6 +689,41 @@ async function getSession() {
   return new Promise((resolve) => {
     chrome.storage.local.get(['pannaai_session'], (result) => {
       resolve(result.pannaai_session || null);
+    });
+  });
+}
+
+async function checkMainAppSession() {
+  // Check if there's a session in the main app's localStorage
+  // This allows sharing sessions between the main app and extension
+  return new Promise((resolve) => {
+    chrome.tabs.query({ url: 'http://localhost:3000/*' }, (tabs) => {
+      if (tabs.length > 0) {
+        // Execute script in the main app tab to get session
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          function: () => {
+            try {
+              const sessionData = localStorage.getItem('sb-iuvvmbtqbaauvtojnxjd-auth-token');
+              if (sessionData) {
+                const parsed = JSON.parse(sessionData);
+                return parsed;
+              }
+            } catch (error) {
+              console.log('Error getting session from main app:', error);
+            }
+            return null;
+          }
+        }, (results) => {
+          if (results && results[0] && results[0].result) {
+            resolve(results[0].result);
+          } else {
+            resolve(null);
+          }
+        });
+      } else {
+        resolve(null);
+      }
     });
   });
 }
@@ -567,6 +781,27 @@ function showError(message) {
   setTimeout(() => {
     errorMessage.classList.remove('active');
   }, 5000);
+}
+
+function showMessage(message, type = 'info') {
+  errorMessage.textContent = message;
+  errorMessage.classList.add('active');
+  
+  // Add success styling for success messages
+  if (type === 'success') {
+    errorMessage.style.color = '#10b981';
+    errorMessage.style.backgroundColor = '#d1fae5';
+    errorMessage.style.borderColor = '#10b981';
+  } else {
+    // Reset to default error styling
+    errorMessage.style.color = '#ef4444';
+    errorMessage.style.backgroundColor = '#fee2e2';
+    errorMessage.style.borderColor = '#ef4444';
+  }
+  
+  setTimeout(() => {
+    errorMessage.classList.remove('active');
+  }, type === 'success' ? 3000 : 5000);
 }
 
 function clearMessages() {
