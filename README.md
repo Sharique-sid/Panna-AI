@@ -4,6 +4,8 @@
 
 A modern, full-stack note-taking application with AI capabilities, real-time synchronization, browser extension, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
+> **Last Updated:** January 7, 2025 | **Version:** 2.0.0
+
 ---
 
 ## 🚀 Live Demo

@@ -1,7 +1,7 @@
 {
-  "name": "take-notes",
-  "version": "1.0.0",
-  "description": "AI-powered note-taking app with real-time sync",
+  "name": "panna-ai",
+  "version": "2.0.0",
+  "description": "Panna.ai - AI-powered note-taking app with browser extension and real-time sync",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
