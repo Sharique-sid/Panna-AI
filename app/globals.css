@@ -305,3 +305,13 @@ html {
   background-color: var(--sidebar-background) !important;
   color: var(--sidebar-foreground) !important;
 }
+
+/* Ensure main heading is always visible */
+.main-heading {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+.dark .main-heading {
+  color: #ffffff !important;
+}

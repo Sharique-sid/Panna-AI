@@ -144,7 +144,7 @@ export function HomePage() {
               </AnimatedSection>
 
               <AnimatedSection animation="slideUp" delay={600}>
-            <h1 className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight text-black dark:text-white`}>
+            <h1 className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight main-heading`}>
               <span>Smart Notes</span>
               <br />
               <span>Made Simple</span>
