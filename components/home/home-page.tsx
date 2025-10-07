@@ -516,18 +516,6 @@ Need help? Visit: https://panna-ai-bice.vercel.app/`);
                       Download Extension
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="px-6 py-3"
-                      style={{ 
-                        borderColor: theme === 'dark' ? '#333333' : '#e5e5e5',
-                        color: theme === 'dark' ? '#ffffff' : '#000000',
-                        fontFamily: 'Inter, sans-serif'
-                      }}
-                    >
-                      Learn More
-                    </Button>
                   </div>
                 </div>
                 </AnimatedSection>

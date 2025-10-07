@@ -140,6 +140,8 @@ export default function TestimonialsSection() {
               className={`
                 w-full lg:w-3/5 xl:w-1/2 p-8 rounded-3xl shadow-xl 
                 transition-all duration-500 ease-out 
+                flex flex-col justify-between
+                min-h-[400px] max-h-[400px]
                 ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'}
               `}
               style={{ 
@@ -148,17 +150,19 @@ export default function TestimonialsSection() {
                 fontFamily: 'Inter, sans-serif'
               }}
             >
-              <StarRating rating={currentTestimonial.rating} />
-              <p 
-                className="text-2xl font-medium leading-relaxed mb-6"
-                style={{ 
-                  color: theme === 'dark' ? '#ffffff' : '#000000',
-                  fontFamily: 'Inter, sans-serif'
-                }}
-              >
-                &ldquo;{currentTestimonial.review}&rdquo;
-              </p>
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex-1 flex flex-col justify-center">
+                <StarRating rating={currentTestimonial.rating} />
+                <p 
+                  className="text-xl font-medium leading-relaxed mb-6 flex-1 flex items-center"
+                  style={{ 
+                    color: theme === 'dark' ? '#ffffff' : '#000000',
+                    fontFamily: 'Inter, sans-serif'
+                  }}
+                >
+                  &ldquo;{currentTestimonial.review}&rdquo;
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-4 mt-auto">
                 {/* Avatar for current testimonial */}
                 <div className="w-16 h-16 rounded-full overflow-hidden">
                   <Image
