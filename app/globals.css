@@ -310,8 +310,20 @@ html {
 .main-heading {
   color: #000000 !important;
   opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
 }
 
 .dark .main-heading {
+  color: #ffffff !important;
+}
+
+/* Force visibility for all heading elements */
+h1, h2, h3, h4, h5, h6 {
+  color: #000000 !important;
+  opacity: 1 !important;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
   color: #ffffff !important;
 }

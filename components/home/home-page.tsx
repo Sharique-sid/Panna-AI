@@ -144,7 +144,16 @@ export function HomePage() {
               </AnimatedSection>
 
               <AnimatedSection animation="slideUp" delay={600}>
-            <h1 className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight main-heading`}>
+            <h1 
+              className={`${headingFont.className} text-5xl md:text-7xl font-bold tracking-tight main-heading`}
+              style={{ 
+                color: theme === 'dark' ? '#ffffff' : '#000000',
+                opacity: 1,
+                visibility: 'visible',
+                display: 'block',
+                WebkitTextFillColor: theme === 'dark' ? '#ffffff' : '#000000'
+              }}
+            >
               <span>Smart Notes</span>
               <br />
               <span>Made Simple</span>
