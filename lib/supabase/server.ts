@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+// Updated: January 7, 2025 - Panna.ai v2.0.0
 export async function createClient() {
   const cookieStore = await cookies()
 
