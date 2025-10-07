@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Panna.ai - Quick Capture",
+  "version": "1.0.0",
+  "description": "Capture notes instantly from anywhere on the web with Panna.ai",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "activeTab",
+    "notifications"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.panna.ai/*",
+    "https://iuvvmbtqbaauvtojnxjd.supabase.co/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' https://cdn.jsdelivr.net; object-src 'self'"
+  }
+}
+

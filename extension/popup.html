@@ -53,18 +53,6 @@
       gap: 8px;
     }
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-img {
-      width: 20px;
-      height: 20px;
-      object-fit: contain;
-    }
-
     .header h1 {
       font-size: 16px;
       font-weight: 700;
@@ -73,210 +61,146 @@
       line-height: 1.2;
     }
 
-    .mail-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #000000;
-      color: white;
+    .logo-container {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      gap: 10px;
     }
 
-    .mail-icon:hover {
-      transform: scale(1.05);
-    }
-
-    .btn-logout {
-      background: transparent;
-      color: #e53e3e;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-logout:hover {
-      background: #fed7d7;
+    .logo-img {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
     }
 
     .content {
       padding: 16px;
     }
 
-    .loading {
+    .mail-icon {
+      width: 36px;
+      height: 36px;
+      background: #000000;
+      border: none;
+      border-radius: 50%;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-    }
-
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 2px solid #e5e5e5;
-      border-top: 2px solid #000000;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    .spinner-small {
-      width: 16px;
-      height: 16px;
-      border: 2px solid #e5e5e5;
-      border-top: 2px solid #ffffff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .error {
-      background: #fed7d7;
-      color: #c53030;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      border: 1px solid #feb2b2;
-    }
-
-    .success {
-      background: #c6f6d5;
-      color: #2f855a;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      border: 1px solid #9ae6b4;
-    }
-
-    .login-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .login-logo {
-      width: 32px;
-      height: 32px;
-      object-fit: contain;
-    }
-
-    .login-title {
-      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 16px;
       font-weight: 700;
-      color: #000000;
-      margin: 0;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    .login-form {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    .mail-icon:hover {
+      background: #333333;
+    }
+
+    /* Login Form */
+    #loginForm {
+      display: none;
+    }
+
+    #loginForm.active {
+      display: block;
     }
 
     .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      margin-bottom: 12px;
     }
 
-    .form-group label {
-      font-size: 14px;
+    label {
+      display: block;
+      margin-bottom: 6px;
       font-weight: 500;
+      font-size: 13px;
       color: #000000;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
-    .form-group input {
+    input[type="email"],
+    input[type="password"],
+    input[type="text"],
+    textarea {
+      width: 100%;
       padding: 12px 16px;
-      border: 1px solid #e5e5e5;
+      border: 1px solid #d1d5db;
       border-radius: 12px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 400;
-      color: #000000;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       background: #ffffff;
-      transition: all 0.2s ease;
+      color: #000000;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
-    .form-group input:focus {
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    input[type="text"]:focus,
+    textarea:focus {
       outline: none;
       border-color: #000000;
-      box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
     }
 
-    .form-group input::placeholder {
-      color: #9ca3af;
+    /* Note Form */
+    #noteForm {
+      display: none;
     }
 
-    .password-input {
-      position: relative;
+    #noteForm.active {
+      display: block;
     }
 
-    .password-input input {
-      padding-right: 40px;
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.2s;
     }
 
-    .password-toggle {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      padding: 4px;
-      color: #6b7280;
-      z-index: 1;
-    }
-
-    .password-toggle:hover {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #ffffff;
       color: #000000;
-    }
-
-    .eye-icon {
-      width: 16px;
-      height: 16px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
     .btn-primary {
       background: #000000;
-      color: #ffffff;
+      color: white;
       border: none;
-      padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 14px;
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .btn-primary:hover {
-      background: #1a1a1a;
-    }
-
-    .btn-primary:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
+      background: #333333;
     }
 
     .btn-google {
@@ -284,8 +208,8 @@
       padding: 12px 16px;
       border: 1px solid #e5e5e5;
       border-radius: 12px;
-      background: #ffffff;
-      color: #000000;
+      background: #000000;
+      color: #ffffff;
       font-size: 14px;
       font-weight: 500;
       display: flex;
@@ -297,8 +221,8 @@
     }
 
     .btn-google:hover {
-      background: #f7f7f7;
-      border-color: #d1d5db;
+      background: #1a1a1a;
+      border-color: #000000;
     }
 
     .google-icon {
@@ -329,29 +253,196 @@
       font-size: 12px;
     }
 
+    .btn-secondary {
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid #d1d5db;
+      font-weight: 500;
+    }
+
+    .btn-secondary:hover {
+      background: #f9f9f9;
+      border-color: #000000;
+    }
+
+    .btn-link {
+      background: transparent;
+      color: #667eea;
+      text-decoration: underline;
+      padding: 8px;
+    }
+
+    .btn-link:hover {
+      color: #764ba2;
+    }
+
+    /* Loading & Error States */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      display: none;
+      padding: 12px 16px;
+      background: #fed7d7;
+      color: #c53030;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .error.active {
+      display: block;
+    }
+
+
+
+    .btn-logout {
+      font-size: 12px;
+      padding: 6px 12px;
+      background: transparent;
+      color: #e53e3e;
+      border: 1px solid #e53e3e;
+    }
+
+    .btn-logout:hover {
+      background: #e53e3e;
+      color: white;
+    }
+
+
+    .website-link {
+      text-align: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .website-link-text {
+      color: #000000;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .website-link-text:hover {
+      text-decoration: underline;
+      color: #333333;
+    }
+
+    /* Login Card Styles */
+    .login-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .login-logo {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+
+    .login-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #000000;
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    /* Login Form Styles */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* Password Input with Toggle */
+    .password-input {
+      position: relative;
+    }
+
+    .password-input input {
+      padding-right: 40px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: #6b7280;
+      transition: color 0.2s ease;
+      z-index: 1;
+    }
+
+    .password-toggle:hover {
+      color: #374151;
+    }
+
+    .eye-icon {
+      width: 16px;
+      height: 16px;
+    }
+
+
+    /* Login Button */
+    .login-btn {
+      position: relative;
+      width: 100%;
+      margin-top: 8px;
+    }
+
     .btn-text {
-      opacity: 1;
       transition: opacity 0.2s ease;
     }
 
     .btn-loader {
-      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
     }
 
-    .website-link {
-      text-align: center;
-      margin-top: 16px;
-    }
-
-    .website-link-text {
-      color: #6b7280;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .website-link-text:hover {
-      color: #000000;
+    .spinner-small {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
   </style>
 </head>
@@ -377,6 +468,7 @@
 
       <!-- Error Message -->
       <div id="errorMessage" class="error"></div>
+
 
       <!-- Login Form -->
       <div id="loginForm">
@@ -465,3 +557,4 @@
   <script src="popup.js"></script>
 </body>
 </html>
+

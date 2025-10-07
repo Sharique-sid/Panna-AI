@@ -1,9 +1,10 @@
 // Configuration
 const API_URL = 'http://localhost:3000'; // Next.js development server
-const SUPABASE_URL = 'https://iuvvmbtqbaauvtojnxjd.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1dnZtYnRxYmFhdXZ0b2pueGpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDI0NTEsImV4cCI6MjA3NDk3ODQ1MX0.v2oCR6JXGF5NBJ_PYDHT1X1BowDewDWYR7_Fu1Tbs7U';
+const SUPABASE_URL = 'https://iuvvmbtqbaauvtojnxjd.supabase.co'; // Your Supabase URL
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1dnZtYnRxYmFhdXZ0b2pueGpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MDI0NTEsImV4cCI6MjA3NDk3ODQ1MX0.v2oCR6JXGF5NBJ_PYDHT1X1BowDewDWYR7_Fu1Tbs7U'; // Your Supabase anon key
 
 // Mock mode for testing (set to false to use real backend)
+// Note: External Supabase script loading is blocked by CSP, so we use mock mode
 let MOCK_MODE = false;
 
 // Supabase client (will be initialized in init function)
@@ -26,8 +27,15 @@ function init() {
   try {
     // Initialize Supabase client
     if (window.supabase) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false
+        }
+      });
       console.log('Supabase client initialized successfully');
+      MOCK_MODE = false;
     } else {
       console.log('Supabase script not loaded, falling back to mock mode');
       MOCK_MODE = true;
@@ -50,12 +58,6 @@ function init() {
   noteFormElement.addEventListener('submit', handleSaveNote);
   logoutBtn.addEventListener('click', handleLogout);
   mailIcon.addEventListener('click', handleMailClick);
-  
-  // Google Sign In Button
-  const googleSignInBtn = document.getElementById('googleSignInBtn');
-  if (googleSignInBtn) {
-    googleSignInBtn.addEventListener('click', handleGoogleSignIn);
-  }
   
   // Password toggle functionality
   const passwordToggle = document.getElementById('passwordToggle');
@@ -83,128 +85,156 @@ function init() {
 
   // Check authentication status
   checkAuth();
-
+  
   } catch (error) {
     console.error('Extension initialization error:', error);
-    showError('Failed to initialize extension. Please reload.');
-    showLoginForm();
-  }
-}
-
-// Google Sign In Handler
-async function handleGoogleSignIn() {
-  try {
-    if (MOCK_MODE) {
-      showError('Google authentication not available in mock mode');
-      return;
+    // Show error message to user
+    if (errorMessage) {
+      errorMessage.textContent = 'Extension failed to load. Please refresh.';
+      errorMessage.classList.add('active');
     }
-
-    if (!supabase) {
-      showError('Authentication service not available');
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-
-    if (error) {
-      showError(error.message);
-      return;
-    }
-
-    // The redirect will happen automatically
-    console.log('Google OAuth initiated successfully');
-  } catch (error) {
-    console.error('Google sign in error:', error);
-    showError('Failed to sign in with Google');
-  }
-}
-
-// Check authentication status
-async function checkAuth() {
-  try {
-    if (MOCK_MODE) {
-      console.log('Mock mode: showing login form');
-      showLoginForm();
-      return;
-    }
-
-    if (!supabase) {
-      console.log('Supabase not available: showing login form');
-      showLoginForm();
-      return;
-    }
-
-    const { data: { session }, error } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error('Session check error:', error);
-      showLoginForm();
-      return;
-    }
+    // Fallback: show login form after 1 second
+    setTimeout(() => {
+      console.log('Fallback: showing login form');
+      hideLoading();
+      if (loginForm) {
+        loginForm.classList.add('active');
+      }
+    }, 1000);
+  }
+}
 
-    if (session && session.user) {
-      console.log('User authenticated:', session.user.email);
-      showNoteForm(session.user.email);
-      updateMailIcon();
+// Check if user is authenticated
+async function checkAuth() {
+  console.log('checkAuth called, MOCK_MODE:', MOCK_MODE);
+  showLoading();
+
+  try {
+    if (MOCK_MODE) {
+      console.log('Mock mode: checking stored session');
+      // Mock mode - check stored session
+      const session = await getSession();
+      console.log('Stored session:', session);
+      if (session && session.access_token) {
+        console.log('Mock session found, showing note form');
+        showNoteForm(session.user.email);
+        updateMailIcon();
+        hideLoading();
+        return;
+      } else {
+        console.log('No mock session, showing login form');
+      }
     } else {
-      console.log('No active session: showing login form');
-      showLoginForm();
+      // Real mode - check stored session first, then Supabase
+      console.log('Real mode: checking stored session...');
+      const storedSession = await getSession();
+      
+      if (storedSession && storedSession.access_token) {
+        console.log('Stored session found, validating with Supabase...');
+        try {
+          // Set the session in Supabase client
+          await supabase.auth.setSession(storedSession);
+          
+          // Verify the session is still valid
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (session && !error) {
+            console.log('Valid session confirmed, showing note form');
+            showNoteForm(session.user.email);
+            updateMailIcon();
+            hideLoading();
+            return;
+          } else {
+            console.log('Stored session invalid, clearing and showing login');
+            await clearSession();
+          }
+        } catch (error) {
+          console.log('Error validating stored session:', error);
+          await clearSession();
+        }
+      }
+      
+      console.log('No valid session, showing login form');
     }
+    
+    // Show login form if no valid session
+    console.log('Showing login form');
+    hideLoading();
+    showLoginForm();
   } catch (error) {
     console.error('Auth check error:', error);
+    hideLoading();
     showLoginForm();
   }
+  
+  // Fallback timeout - if still loading after 3 seconds, show login form
+  setTimeout(() => {
+    if (loading && loading.classList.contains('active')) {
+      console.log('Auth timeout fallback: showing login form');
+      hideLoading();
+      showLoginForm();
+    }
+  }, 3000);
 }
 
-// Handle login form submission
+// Handle login
 async function handleLogin(e) {
   e.preventDefault();
   clearMessages();
 
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value.trim();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
 
-  if (!email || !password) {
-    showError('Please enter both email and password.');
-    return;
+  // Show loading state on button
+  const loginBtn = document.querySelector('.login-btn');
+  const btnText = document.querySelector('.btn-text');
+  const btnLoader = document.querySelector('.btn-loader');
+  
+  if (loginBtn && btnText && btnLoader) {
+    loginBtn.disabled = true;
+    btnText.style.opacity = '0';
+    btnLoader.style.display = 'block';
   }
 
   showLoading();
 
   try {
     if (MOCK_MODE) {
-      // Mock login - simulate success
-      setTimeout(() => {
-        showNoteForm(email);
-        updateMailIcon();
-      }, 1000);
-      return;
-    }
-
-    if (!supabase) {
-      throw new Error('Authentication service not available');
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (data.session) {
-      console.log('Login successful, showing note form');
+      // Mock login - simulate successful authentication
+      const mockSession = {
+        access_token: 'mock_token_' + Date.now(),
+        user: {
+          email: email,
+          id: 'mock_user_' + Date.now()
+        }
+      };
+      
+      await saveSession(mockSession);
       showNoteForm(email);
       updateMailIcon();
     } else {
-      throw new Error('No session returned');
+      // Real Supabase authentication
+      console.log('Attempting Supabase login...');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      console.log('Login result:', { data, error });
+
+      if (error) {
+        throw new Error(error.message || 'Login failed');
+      }
+
+      if (data.session) {
+        console.log('Login successful, saving session and showing note form');
+        await saveSession(data.session);
+        showNoteForm(email);
+        updateMailIcon();
+      } else {
+        throw new Error('No session returned');
+      }
     }
   } catch (error) {
     console.error('Login error:', error);
@@ -401,65 +431,94 @@ async function handleSaveNote(e) {
   }
 }
 
-// Session management
-async function getSession() {
+
+// Validate session with backend
+async function validateSession(accessToken) {
   if (MOCK_MODE) {
-    return { user: { email: 'mock@example.com' } };
+    // Mock validation - always return true for testing
+    return true;
   }
 
-  if (!supabase) {
-    return null;
-  }
+  try {
+    const response = await fetch(`${API_URL}/api/extension/validate`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
 
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
+    return response.ok;
+  } catch (error) {
+    console.error('Validate session error:', error);
+    return false;
+  }
+}
+
+// Session management using chrome.storage
+async function getSession() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['pannaai_session'], (result) => {
+      resolve(result.pannaai_session || null);
+    });
+  });
+}
+
+async function saveSession(session) {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ pannaai_session: session }, () => {
+      resolve();
+    });
+  });
 }
 
 async function clearSession() {
-  if (MOCK_MODE) {
-    return;
-  }
-
-  if (supabase) {
-    await supabase.auth.signOut();
-  }
+  return new Promise((resolve) => {
+    chrome.storage.local.remove('pannaai_session', () => {
+      resolve();
+    });
+  });
 }
 
-// UI management functions
-function showLoading() {
-  loading.style.display = 'flex';
-  loginForm.style.display = 'none';
-  noteForm.style.display = 'none';
-}
-
-function hideLoading() {
-  loading.style.display = 'none';
-}
-
+// UI Helper Functions
 function showLoginForm() {
-  document.getElementById('mainHeader').style.display = 'none';
-  loading.style.display = 'none';
-  loginForm.style.display = 'block';
-  noteForm.style.display = 'none';
-  clearMessages();
+  hideLoading();
+  loginForm.classList.add('active');
+  noteForm.classList.remove('active');
+  document.getElementById('mainHeader').style.display = 'none'; // Hide header on login page
+  mailIcon.style.display = 'none'; // Hide mail icon on login page
+  logoutBtn.style.display = 'none'; // Hide logout button on login page
 }
 
 function showNoteForm(email) {
-  document.getElementById('mainHeader').style.display = 'flex';
-  loading.style.display = 'none';
-  loginForm.style.display = 'none';
-  noteForm.style.display = 'block';
-  clearMessages();
-  
-  // Update mail icon
-  updateMailIcon();
+  hideLoading();
+  loginForm.classList.remove('active');
+  noteForm.classList.add('active');
+  document.getElementById('mainHeader').style.display = 'flex'; // Show header when logged in
+  mailIcon.style.display = 'flex'; // Show mail icon when logged in
+  logoutBtn.style.display = 'block'; // Show logout button when logged in
+  // userEmail removed - email only shows in mail icon now
+  noteContent.focus();
+}
+
+function showLoading() {
+  loading.classList.add('active');
+  loginForm.classList.remove('active');
+  noteForm.classList.remove('active');
+}
+
+function hideLoading() {
+  loading.classList.remove('active');
 }
 
 function showError(message) {
   errorMessage.textContent = message;
-  errorMessage.style.display = 'block';
+  errorMessage.classList.add('active');
+  setTimeout(() => {
+    errorMessage.classList.remove('active');
+  }, 5000);
 }
 
 function clearMessages() {
-  errorMessage.style.display = 'none';
+  errorMessage.classList.remove('active');
 }
+

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Extension Icons</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .icon-container { display: inline-block; margin: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Panna.ai Extension Icons</h1>
+    <p>Right-click each icon and "Save image as..." to save them as PNG files.</p>
+    
+    <div class="icon-container">
+        <canvas id="icon16" width="16" height="16"></canvas>
+        <br>icon-16.png
+    </div>
+    
+    <div class="icon-container">
+        <canvas id="icon48" width="48" height="48"></canvas>
+        <br>icon-48.png
+    </div>
+    
+    <div class="icon-container">
+        <canvas id="icon128" width="128" height="128"></canvas>
+        <br>icon-128.png
+    </div>
+
+    <script>
+        function createIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            // Fill background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add rounded corners
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Add note icon (📝)
+            ctx.fillStyle = 'white';
+            ctx.font = `${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('📝', size/2, size/2);
+        }
+        
+        // Create all icons
+        createIcon('icon16', 16);
+        createIcon('icon48', 48);
+        createIcon('icon128', 128);
+    </script>
+</body>
+</html>
