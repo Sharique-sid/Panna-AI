@@ -45,6 +45,12 @@ export function DashboardLayout({ user }: DashboardLayoutProps) {
       }
     };
     loadData();
+
+    // Cleanup real-time subscriptions on unmount
+    return () => {
+      const { cleanup } = useNotesStore.getState();
+      cleanup();
+    };
   }, [loadNotes, loadCategories]);
 
   // Filter notes based on selected category and search query

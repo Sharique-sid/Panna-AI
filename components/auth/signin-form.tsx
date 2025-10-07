@@ -38,11 +38,18 @@ export function SignInForm({
   const [googleLoading, setGoogleLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [isExtension, setIsExtension] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     setMounted(true);
+    
+    // Check if opened from extension
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('extension') === 'true') {
+      setIsExtension(true);
+    }
   }, []);
 
   const form = useForm<SignInFormData>({
@@ -84,19 +91,48 @@ export function SignInForm({
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
+      if (isExtension) {
+        // For extension, use a different redirect URL that will send the session back
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?extension=true`
+          }
+        });
 
-      if (error) {
-        toast.error(error.message);
-        return;
+        if (error) {
+          // Send error back to extension
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_ERROR',
+              error: error.message
+            }, window.location.origin);
+          }
+          return;
+        }
+      } else {
+        // Normal web app flow
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        });
+
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
       }
     } catch (error) {
-      toast.error("Failed to sign in with Google");
+      if (isExtension && window.opener) {
+        window.opener.postMessage({
+          type: 'GOOGLE_AUTH_ERROR',
+          error: 'Failed to sign in with Google'
+        }, window.location.origin);
+      } else {
+        toast.error("Failed to sign in with Google");
+      }
     } finally {
       setGoogleLoading(false);
     }

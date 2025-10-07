@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight, Moon, Sun, FileText, RefreshCw, Languages, Tag, Shield, Infinity } from "lucide-react";
+import { Sparkles, ArrowRight, Moon, Sun, FileText, RefreshCw, Languages, Tag, Shield, Infinity, Zap, MousePointer, Globe } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Playfair_Display } from "next/font/google";
 import TestimonialsSection from "./testimonials-section";
@@ -71,10 +71,10 @@ export function HomePage() {
           {/* Center: Nav links */}
           <div className="hidden md:flex items-center gap-8">
             <Link href="#use-cases" className="text-sm font-medium hover:underline" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-              Use cases
+              Features
             </Link>
-            <Link href="#features" className="text-sm font-medium hover:underline" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-              Resources
+            <Link href="#extension" className="text-sm font-medium hover:underline" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
+              Extension
             </Link>
             <Link href="#reviews" className="text-sm font-medium hover:underline" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
               Reviews
@@ -139,7 +139,7 @@ export function HomePage() {
                  fontFamily: 'Inter, sans-serif'
                }}>
             <Sparkles className="h-4 w-4" />
-            AI-Powered & Free Forever
+            AI-Powered + Browser Extension
           </div>
               </AnimatedSection>
 
@@ -153,8 +153,8 @@ export function HomePage() {
 
               <AnimatedSection animation="slideUp" delay={800}>
             <p className="text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed text-muted-foreground">
-              A beautiful, minimal note-taking app with AI-powered features.
-              Completely free and open source.
+              A beautiful, minimal note-taking app with AI-powered features and browser extension.
+              Capture notes from anywhere and organize them seamlessly. Completely free and open source.
             </p>
               </AnimatedSection>
           </div>
@@ -392,11 +392,135 @@ export function HomePage() {
               />
             </div>
               </AnimatedSection>
-            </div>
+          </div>
           </AnimatedSection>
 
           {/* Interactive Testimonials Section */}
           <TestimonialsSection />
+
+          {/* Browser Extension Section */}
+          <AnimatedSection animation="slideUp" delay={200}>
+          <div id="extension" className="pt-20">
+              <AnimatedSection animation="fadeIn" delay={400}>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+                Capture Notes Anywhere
+              </h2>
+              <p className="text-xl max-w-2xl mx-auto text-muted-foreground">
+                Save text from any website instantly with our powerful browser extension
+              </p>
+            </div>
+              </AnimatedSection>
+
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                {/* Left: Extension Features */}
+                <AnimatedSection animation="slideLeft" delay={600}>
+                <div className="space-y-8">
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" 
+                           style={{ backgroundColor: '#000000' }}>
+                        <MousePointer className="h-6 w-6" style={{ color: '#ffffff' }} />
+                </div>
+                      <div>
+                        <h3 className="text-xl font-semibold mb-2" style={{ 
+                          color: theme === 'dark' ? '#ffffff' : '#000000',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>Double-Click to Save</h3>
+                        <p className="text-muted-foreground" style={{ 
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                          Simply double-click any selected text on any website to instantly save it to your notes
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" 
+                       style={{ backgroundColor: '#000000' }}>
+                        <Globe className="h-6 w-6" style={{ color: '#ffffff' }} />
+                  </div>
+                  <div>
+                        <h3 className="text-xl font-semibold mb-2" style={{ 
+                      color: theme === 'dark' ? '#ffffff' : '#000000',
+                      fontFamily: 'Inter, sans-serif'
+                        }}>Works Everywhere</h3>
+                        <p className="text-muted-foreground" style={{ 
+                      fontFamily: 'Inter, sans-serif'
+                        }}>
+                          Compatible with all websites - news articles, research papers, social media, and more
+                        </p>
+                </div>
+              </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" 
+                       style={{ backgroundColor: '#000000' }}>
+                        <Zap className="h-6 w-6" style={{ color: '#ffffff' }} />
+                  </div>
+                  <div>
+                        <h3 className="text-xl font-semibold mb-2" style={{ 
+                      color: theme === 'dark' ? '#ffffff' : '#000000',
+                      fontFamily: 'Inter, sans-serif'
+                        }}>Real-time Sync</h3>
+                        <p className="text-muted-foreground" style={{ 
+                      fontFamily: 'Inter, sans-serif'
+                        }}>
+                          Notes appear instantly on your dashboard with automatic source attribution
+                        </p>
+                  </div>
+                </div>
+              </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button
+                      size="lg"
+                      className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90"
+                      asChild
+                    >
+                      <Link href="/auth/signup">
+                        Install Extension
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="px-6 py-3"
+                      style={{ 
+                        borderColor: theme === 'dark' ? '#333333' : '#e5e5e5',
+                        color: theme === 'dark' ? '#ffffff' : '#000000',
+                        fontFamily: 'Inter, sans-serif'
+                      }}
+                    >
+                      Learn More
+                    </Button>
+                  </div>
+                </div>
+                </AnimatedSection>
+
+                {/* Right: Simple Extension Image */}
+                <AnimatedSection animation="slideRight" delay={800}>
+                <div className="flex justify-center">
+                  <div className="w-80 h-64 rounded-2xl overflow-hidden shadow-lg" 
+                       style={{ 
+                backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
+                border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
+              }}>
+                    <img 
+                      src="/Extension.png" 
+                      alt="Panna.ai Browser Extension" 
+                      className="w-full h-full object-contain"
+                      style={{ 
+                        filter: theme === 'dark' ? 'brightness(0.9)' : 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+                </AnimatedSection>
+              </div>
+            </div>
+          </AnimatedSection>
 
           {/* Final CTA Section */}
           <AnimatedSection animation="slideUp" delay={200}>

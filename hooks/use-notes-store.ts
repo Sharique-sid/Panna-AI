@@ -36,12 +36,134 @@ interface NotesStore {
   createCategory: (name: string) => Promise<void>;
   updateCategory: (id: string, name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  
+  // Real-time management
+  cleanup: () => void;
 }
 
 export const useNotesStore = create<NotesStore>()(
   persist(
     (set, get) => {
       const supabase = createClient();
+      let realtimeChannel: any = null;
+
+      // Initialize real-time subscription
+      const initRealtime = () => {
+        if (realtimeChannel) return; // Already initialized
+
+        realtimeChannel = supabase
+          .channel('notes-realtime')
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notes',
+            },
+            (payload) => {
+              console.log('New note created via real-time:', payload);
+              // Add the new note to the store
+              const newNote = {
+                id: payload.new.id,
+                userId: payload.new.user_id,
+                title: payload.new.title,
+                content: payload.new.content,
+                categoryId: payload.new.category_id,
+                tags: payload.new.tags || [],
+                isFavorite: payload.new.is_favorite,
+                deletedAt: payload.new.deleted_at,
+                createdAt: payload.new.created_at,
+                updatedAt: payload.new.updated_at,
+              };
+              
+              set((state) => ({
+                notes: [newNote, ...state.notes],
+              }));
+
+              // Show notification for new notes (likely from extension)
+              if (typeof window !== 'undefined') {
+                // Import toast dynamically to avoid SSR issues
+                import('sonner').then(({ toast }) => {
+                  toast.success(`📝 New note added: "${newNote.title}"`, {
+                    description: 'Created from extension',
+                    duration: 4000,
+                  });
+                });
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'notes',
+            },
+            (payload) => {
+              console.log('Note updated via real-time:', payload);
+              // Update the note in the store
+              set((state) => ({
+                notes: state.notes.map((note) =>
+                  note.id === payload.new.id
+                    ? {
+                        ...note,
+                        title: payload.new.title,
+                        content: payload.new.content,
+                        categoryId: payload.new.category_id,
+                        tags: payload.new.tags || [],
+                        isFavorite: payload.new.is_favorite,
+                        deletedAt: payload.new.deleted_at,
+                        updatedAt: payload.new.updated_at,
+                      }
+                    : note
+                ),
+                selectedNote:
+                  state.selectedNote?.id === payload.new.id
+                    ? {
+                        ...state.selectedNote,
+                        title: payload.new.title,
+                        content: payload.new.content,
+                        categoryId: payload.new.category_id,
+                        tags: payload.new.tags || [],
+                        isFavorite: payload.new.is_favorite,
+                        deletedAt: payload.new.deleted_at,
+                        updatedAt: payload.new.updated_at,
+                      }
+                    : state.selectedNote,
+              }));
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'DELETE',
+              schema: 'public',
+              table: 'notes',
+            },
+            (payload) => {
+              console.log('Note deleted via real-time:', payload);
+              // Remove the note from the store
+              set((state) => ({
+                notes: state.notes.filter((note) => note.id !== payload.old.id),
+                selectedNote:
+                  state.selectedNote?.id === payload.old.id
+                    ? null
+                    : state.selectedNote,
+              }));
+            }
+          )
+          .subscribe((status) => {
+            console.log('Realtime subscription status:', status);
+          });
+      };
+
+      // Cleanup real-time subscription
+      const cleanupRealtime = () => {
+        if (realtimeChannel) {
+          supabase.removeChannel(realtimeChannel);
+          realtimeChannel = null;
+        }
+      };
 
       return {
         notes: [],
@@ -91,6 +213,9 @@ export const useNotesStore = create<NotesStore>()(
             }));
 
             set({ notes, isLoading: false });
+            
+            // Initialize real-time subscription after loading notes
+            initRealtime();
           } catch (error: any) {
             set({ error: error.message, isLoading: false });
           }
@@ -435,6 +560,10 @@ export const useNotesStore = create<NotesStore>()(
           } catch (error: any) {
             set({ error: error.message });
           }
+        },
+
+        cleanup: () => {
+          cleanupRealtime();
         },
       };
     },

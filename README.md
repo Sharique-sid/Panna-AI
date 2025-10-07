@@ -1,6 +1,8 @@
 # Panna.ai – AI-Powered Note Taking App
 
-A modern, full-stack note-taking application with AI capabilities, real-time synchronization, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
+![Panna.ai Banner](./public/opengraph-image.png)
+
+A modern, full-stack note-taking application with AI capabilities, real-time synchronization, browser extension, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
 ---
 
@@ -21,6 +23,29 @@ Experience a clean, modern three-panel layout with:
 - **Editor**: Rich text editor with AI tools, tags, and image support
 
 ![Panna.ai Dashboard](./public/demo.png)
+
+### Browser Extension
+Capture notes from any website with our powerful Chrome extension:
+
+![Panna.ai Browser Extension](./public/Extension.png)
+
+---
+
+## 🔧 Browser Extension Setup
+
+### Installation
+1. **Download the extension** from the `extension/` folder
+2. **Open Chrome** and go to `chrome://extensions/`
+3. **Enable Developer mode** (toggle in top-right corner)
+4. **Click "Load unpacked"** and select the extension folder
+5. **Pin the extension** to your toolbar for easy access
+
+### Features
+- **Automatic Session Sync**: Sign in once on the main website, and the extension automatically recognizes your session
+- **Google OAuth**: Sign in with Google directly in the extension popup
+- **Quick Capture**: Double-click any selected text to save it instantly
+- **Real-time Updates**: Notes appear immediately on your dashboard
+- **Clean UI**: Matches your main application's design perfectly
 
 ---
 
@@ -47,6 +72,20 @@ Experience a clean, modern three-panel layout with:
 - Star/unstar notes with visual indicators
 - Soft delete to trash with restore functionality
 - Permanent delete option from trash
+
+### 🌐 Browser Extension
+
+- **Quick Capture**: Double-click any selected text on any website to instantly save it to your notes
+- **Universal Compatibility**: Works on all websites - news articles, research papers, social media, and more
+- **Real-time Sync**: Notes appear instantly on your dashboard with automatic source attribution
+- **Clean Interface**: Minimalist popup design matching your main application
+- **Seamless Authentication**: 
+  - **Automatic Session Sync**: If you're signed in on the main website, the extension automatically detects and syncs your session
+  - **Google OAuth Integration**: Sign in with Google directly in the extension popup
+  - **Session Persistence**: Stay signed in across browser sessions
+  - **Cross-Platform**: Works seamlessly between web app and extension
+- **Smart Context Menu**: Right-click on any webpage to access quick note capture
+- **Custom Logout Dialog**: Clean, in-extension logout confirmation (no browser popups)
 
 ### 🎨 Responsive Design
 
@@ -92,8 +131,13 @@ Experience a clean, modern three-panel layout with:
 
 ### 🔐 Authentication & Security
 
-- Complete authentication system with Supabase Auth
-- Email/password, password reset, user profile management, secure endpoints
+- **Complete Authentication System**: Supabase Auth with email/password and Google OAuth
+- **Password Management**: Reset, update, and secure password handling
+- **User Profile Management**: Avatar uploads, preferences, and profile settings
+- **Secure Endpoints**: Protected API routes with JWT validation
+- **Cross-Platform Sessions**: Seamless authentication between web app and browser extension
+- **Service Role Integration**: Secure server-side operations with admin privileges
+- **Session Persistence**: Automatic session refresh and cross-device synchronization
 
 ---
 
@@ -102,11 +146,50 @@ Experience a clean, modern three-panel layout with:
 - **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS
 - **Backend:** Supabase (PostgreSQL, Auth, Realtime, Storage)
 - **AI:** Google Gemini AI (`@google/generative-ai`)
-- **State Management:** Zustand
+- **State Management:** Zustand with persistence
 - **Forms:** React Hook Form + Zod
 - **UI:** shadcn/ui, Radix UI
 - **Markdown:** React Markdown + remark-gfm
+- **Browser Extension:** Chrome Extension API, Content Scripts, Background Scripts
+- **Authentication:** Supabase Auth with Google OAuth integration
+- **API Endpoints:** 
+  - `/api/notes/create` - Create notes from extension
+  - `/api/auth/check-session` - Session validation for extension
+  - `/api/extension/notes/create` - Dedicated extension note creation
+  - `/api/extension/validate` - Extension authentication validation
+- **Real-time:** Supabase Realtime subscriptions for live updates
 - **Testing:** Jest, React Testing Library, Playwright
+
+---
+
+## 🌐 Browser Extension Development
+
+### Extension Architecture
+- **Manifest V3**: Modern Chrome extension with service worker
+- **Content Scripts**: Inject functionality into web pages for text selection
+- **Background Scripts**: Handle context menu and notification APIs
+- **Popup Interface**: Clean, responsive UI matching the main application
+- **Chrome Storage**: Secure local storage for session management
+
+### Key Features Implemented
+- **Automatic Session Sync**: Detects existing sessions from main website
+- **Google OAuth Flow**: Seamless authentication within extension popup
+- **Real-time Note Creation**: Instant synchronization with dashboard
+- **Context Menu Integration**: Right-click to save selected text
+- **Cross-Origin Communication**: Secure API calls to main application
+- **Error Handling**: Comprehensive error management and user feedback
+
+### Extension Files
+```
+extension/
+├── manifest.json          # Extension configuration
+├── popup.html            # Extension popup interface
+├── popup.js              # Main extension logic
+├── background.js         # Background service worker
+├── content-script.js     # Web page injection script
+├── supabase-client.js    # Supabase client for extension
+└── icons/                # Extension icons
+```
 
 ---
 
@@ -131,6 +214,28 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Gemini AI Configuration
+GEMINI_API_KEY=your_gemini_api_key
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+**Important Notes:**
+- **Service Role Key**: Required for extension note creation and admin operations
+- **Google OAuth**: Configure Google OAuth in Supabase dashboard for extension authentication
+- **CORS Settings**: Ensure localhost:3000 is allowed in Supabase CORS settings
 
 ---
 
@@ -221,6 +326,26 @@ SUPABASE_SERVICE_ROLE_KEY=your_production_supabase_service_role_key
 GEMINI_API_KEY=your_gemini_api_key
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
+
+---
+
+## 🆕 Recent Updates
+
+### Version 2.0 - Browser Extension & Enhanced Authentication
+- ✅ **Browser Extension**: Full-featured Chrome extension with automatic session sync
+- ✅ **Google OAuth Integration**: Seamless sign-in with Google accounts
+- ✅ **Cross-Platform Authentication**: Session sharing between web app and extension
+- ✅ **Real-time Note Sync**: Instant synchronization between extension and dashboard
+- ✅ **Service Role Integration**: Secure server-side operations for extension
+- ✅ **Enhanced UI/UX**: Improved authentication flows and user experience
+- ✅ **Comprehensive Error Handling**: Better error management and user feedback
+
+### Key Technical Improvements
+- **Session Management**: Automatic session detection and synchronization
+- **API Architecture**: Dedicated endpoints for extension functionality
+- **Security**: Enhanced authentication with JWT validation and service role keys
+- **Performance**: Optimized real-time updates and state management
+- **User Experience**: Seamless cross-platform experience
 
 ---
 
