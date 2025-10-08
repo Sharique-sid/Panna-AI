@@ -5,7 +5,7 @@ INSERT INTO categories (user_id, name) VALUES
   ((SELECT id FROM auth.users LIMIT 1), 'Ideas'),
   ((SELECT id FROM auth.users LIMIT 1), 'Projects');
 
--- Insert sample notes
+
 INSERT INTO notes (user_id, title, content, category_id, is_favorite) VALUES
   (
     (SELECT id FROM auth.users LIMIT 1),
