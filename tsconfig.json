@@ -1,4 +1,6 @@
+//tsconfig.json//
 {
+
   "_comment": "Updated: October 7, 2025 - Panna.ai v2.0.0",
   "compilerOptions": {
     "target": "ES2017",
