@@ -9,7 +9,7 @@ A modern, full-stack note-taking application with AI capabilities, real-time syn
 ## 🚀 Live Demo
 
 ### Landing Page
-![Panna.ai Landing Page](./public/landing.png)
+![Panna.ai Landing Page](public/landing.png)
 
 Experience our three core features:
 - **AI-Powered**: Smart features to enhance your note-taking experience
