@@ -15,7 +15,7 @@ export default function ClearCookiesPage() {
   useEffect(() => {
     const clearAllCookies = async () => {
       try {
-        // First, call the server-side logout
+     
         const response = await fetch("/api/auth/logout", {
           method: "POST",
         });
