@@ -71,7 +71,7 @@
 ## 📁 Project Structure
 
 ```
-take-notes/
+panna.ai/
 ├── app/                              # Next.js App Router
 │   ├── api/                          # API Routes
 │   │   ├── ai/                       # AI Integration Endpoints
@@ -902,7 +902,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```bash
 # Clone repository
 git clone <repo-url>
-cd take-notes
+cd panna.ai
 
 # Install dependencies
 npm install
