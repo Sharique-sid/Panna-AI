@@ -11,7 +11,7 @@ export default function ForceClearPage() {
   const [storageInfo, setStorageInfo] = useState<any>(null);
 
   useEffect(() => {
-    // Get detailed storage information
+
     const info = {
       localStorage: {},
       sessionStorage: {},
