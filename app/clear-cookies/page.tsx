@@ -42,8 +42,8 @@ export default function ClearCookiesPage() {
           
           domains.forEach(domain => {
             paths.forEach(path => {
-              document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}; domain=${domain}`;
-              document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}`;
+              document.cookie = `${cookieName}=; expires=Thu, 01 Oct 1970 00:00:00 GMT; path=${path}; domain=${domain}`;
+              document.cookie = `${cookieName}=; expires=Thu, 01 Oct 1970 00:00:00 GMT; path=${path}`;
             });
           });
           
@@ -96,8 +96,8 @@ export default function ClearCookiesPage() {
         
         domains.forEach(domain => {
           paths.forEach(path => {
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}; domain=${domain}`;
-            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Oct 1970 00:00:00 GMT; path=${path}; domain=${domain}`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Oct 1970 00:00:00 GMT; path=${path}`;
           });
         });
         
