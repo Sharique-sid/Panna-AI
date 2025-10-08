@@ -28,9 +28,9 @@ export default function BypassStoragePage() {
       document.cookie.split(";").forEach((c) => {
         const eqPos = c.indexOf("=");
         const name = eqPos > -1 ? c.substr(0, eqPos) : c;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + window.location.hostname;
+        document.cookie = name + "=;expires=Thu, 01 Oct 1970 00:00:00 GMT;path=/";
+        document.cookie = name + "=;expires=Thu, 01 Oct 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
+        document.cookie = name + "=;expires=Thu, 01 Oct 1970 00:00:00 GMT;path=/;domain=." + window.location.hostname;
       });
 
       // Set bypass flag
