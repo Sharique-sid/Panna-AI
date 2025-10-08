@@ -12,7 +12,7 @@ export default function BypassStoragePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Set a flag to disable persistence
+    
     sessionStorage.setItem('bypass-persistence', 'true');
   }, []);
 
