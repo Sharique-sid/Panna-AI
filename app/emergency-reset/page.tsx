@@ -9,8 +9,7 @@ export default function EmergencyResetPage() {
       // Clear all storage
       localStorage.clear();
       sessionStorage.clear();
-      
-      // Clear all cookies
+
       document.cookie.split(";").forEach((c) => {
         const eqPos = c.indexOf("=");
         const name = eqPos > -1 ? c.substr(0, eqPos) : c;
