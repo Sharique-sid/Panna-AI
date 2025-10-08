@@ -619,7 +619,7 @@ Need help? Visit: https://panna-ai-bice.vercel.app/`);
           color: theme === 'dark' ? '#f2f2f2' : '#666666',
           fontFamily: 'Inter, sans-serif'
         }}>
-          Built with ❤️ by India
+          Made with ❤️ in India
         </p>
           
         </div>
