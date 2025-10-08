@@ -24,7 +24,7 @@
 ### Key Characteristics
 - **Type**: Full-stack web application
 - **Version**: 1.0.0
-- **Author**: Hasnain
+- **Author**: Md Taufique Alam
 - **License**: MIT
 - **Description**: AI-powered note-taking app with real-time sync
 

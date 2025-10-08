@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "new-york",
-  "_comment": "Updated: January 7, 2025 - Panna.ai v2.0.0",
+  "_comment": "Updated: October 7, 2025 - Panna.ai v2.0.0",
   "rsc": true,
   "tsx": true,
   "tailwind": {

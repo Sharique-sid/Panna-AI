@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Updated: January 7, 2025 - Panna.ai v2.0.0
+// Updated: October 7, 2025 - Panna.ai v2.0.0
 if (!process.env.GEMINI_API_KEY) {
   throw new Error("GEMINI_API_KEY is not set");
 }

@@ -9,10 +9,10 @@ INSERT INTO categories (user_id, name) VALUES
 INSERT INTO notes (user_id, title, content, category_id, is_favorite) VALUES
   (
     (SELECT id FROM auth.users LIMIT 1),
-    'Welcome to TakeNote!',
-    '# Welcome to TakeNote!
+    'Welcome to Panna.ai!',
+    '# Welcome to Panna.ai!
 
-TakeNote is a modern, AI-powered note-taking application that helps you capture, organize, and enhance your thoughts.
+Panna.ai is a modern, AI-powered note-taking application that helps you capture, organize, and enhance your thoughts.
 
 ## Features
 
