@@ -2,14 +2,14 @@
 
 A modern, full-stack note-taking application with AI capabilities, real-time synchronization, browser extension, and a beautiful user interface built with Next.js, Supabase, and Google Gemini AI.
 
-> **Last Updated:** January 7, 2025 | **Version:** 2.0.0
+> **Last Updated:** October 7, 2025 | **Version:** 2.0.0
 
 ---
 
 ## 🚀 Live Demo
 
 ### Landing Page
-![Panna.ai Landing Page](./landingpage.png)
+![Panna.ai Landing Page](./public/landing.png)
 
 Experience our three core features:
 - **AI-Powered**: Smart features to enhance your note-taking experience
