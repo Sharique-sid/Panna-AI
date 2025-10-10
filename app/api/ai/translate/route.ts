@@ -19,10 +19,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Text and language are required" }, { status: 400 })
     }
 
-    // Enhanced prompt for Hindi translation
+    // Enhanced prompts for specific languages
     const getLanguagePrompt = (lang: string) => {
       if (lang === "Hindi") {
         return `Translate the following text to Hindi (हिंदी). Use proper Devanagari script and maintain the original meaning and tone. Only return the translation:\n\n`
+      }
+      if (lang === "English") {
+        return `Translate the following text to English. Use clear, natural English and maintain the original meaning and tone. Only return the translation:\n\n`
       }
       return `Translate the following text to ${language}. Only return the translation:\n\n`
     }

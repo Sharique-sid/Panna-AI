@@ -90,6 +90,12 @@ export function AIToolsMenu({
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-36">
             <DropdownMenuItem
+              onClick={() => onTranslate("English")}
+              className="text-sm"
+            >
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={() => onTranslate("Spanish")}
               className="text-sm"
             >
