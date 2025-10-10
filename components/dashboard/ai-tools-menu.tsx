@@ -113,42 +113,6 @@ export function AIToolsMenu({
             >
               Italian
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onTranslate("Hindi")}
-              className="text-sm"
-            >
-              Hindi
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onTranslate("Portuguese")}
-              className="text-sm"
-            >
-              Portuguese
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onTranslate("Chinese")}
-              className="text-sm"
-            >
-              Chinese
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onTranslate("Japanese")}
-              className="text-sm"
-            >
-              Japanese
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onTranslate("Korean")}
-              className="text-sm"
-            >
-              Korean
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onTranslate("Arabic")}
-              className="text-sm"
-            >
-              Arabic
-            </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 

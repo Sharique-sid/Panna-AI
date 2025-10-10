@@ -88,24 +88,15 @@ export function SignInForm({
     }
   };
 
-  const handleGoogleSignIn = async (retryCount = 0) => {
+  const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      // Add a small delay for retry attempts to help with OAuth state issues
-      if (retryCount > 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
       if (isExtension) {
         // For extension, use a different redirect URL that will send the session back
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback?extension=true`,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent'
-            }
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback?extension=true`
           }
         });
 
@@ -120,15 +111,11 @@ export function SignInForm({
           return;
         }
       } else {
-        // Normal web app flow with enhanced options
+        // Normal web app flow
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
-            queryParams: {
-              access_type: 'offline',
-              prompt: retryCount === 0 ? 'select_account' : 'consent'
-            }
+            redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`
           }
         });
 
@@ -137,19 +124,14 @@ export function SignInForm({
           return;
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       if (isExtension && window.opener) {
         window.opener.postMessage({
           type: 'GOOGLE_AUTH_ERROR',
           error: 'Failed to sign in with Google'
         }, window.location.origin);
       } else {
-        // Show more helpful error message for first-time users
-        if (retryCount === 0) {
-          toast.error("First-time login may require a second attempt. Please try again if this fails.");
-        } else {
-          toast.error("Failed to sign in with Google. Please try again or contact support.");
-        }
+        toast.error("Failed to sign in with Google");
       }
     } finally {
       setGoogleLoading(false);
