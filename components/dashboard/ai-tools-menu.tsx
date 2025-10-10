@@ -113,6 +113,12 @@ export function AIToolsMenu({
             >
               Italian
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onTranslate("Hindi")}
+              className="text-sm"
+            >
+              Hindi
+            </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 
