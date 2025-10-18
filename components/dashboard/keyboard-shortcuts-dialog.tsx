@@ -33,6 +33,7 @@ export function KeyboardShortcutsDialog({
       category: "Navigation",
       items: [
         { keys: ["Ctrl", "Shift", "T"], description: "New note" },
+        { keys: ["Ctrl", "Shift", "H"], description: "Focus title" },
         { keys: ["Ctrl", "S"], description: "Save note" },
         { keys: ["Ctrl", "F"], description: "Search" },
         { keys: ["Esc"], description: "Close dialogs" },

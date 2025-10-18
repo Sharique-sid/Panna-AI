@@ -523,15 +523,17 @@ Need help? Visit: https://panna-ai-bice.vercel.app/`);
                 {/* Right: Simple Extension Image */}
                 <AnimatedSection animation="slideRight" delay={800}>
                 <div className="flex justify-center">
-                  <div className="w-80 h-64 rounded-2xl overflow-hidden shadow-lg" 
+                  <div className="w-80 h-64 rounded-lg overflow-hidden shadow-lg" 
                        style={{ 
-                backgroundColor: theme === 'dark' ? '#171717' : '#f7f7f7',
-                border: `1px solid ${theme === 'dark' ? '#333333' : '#e5e5e5'}`
+                border: `2px solid ${theme === 'dark' ? '#404040' : '#d1d5db'}`
               }}>
-                    <img 
-                      src="/Extension.png" 
-                      alt="Panna.ai Browser Extension" 
-                      className="w-full h-full object-contain"
+                    <video 
+                      src="/Panna.ai extension vdo.mp4" 
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       style={{ 
                         filter: theme === 'dark' ? 'brightness(0.9)' : 'none'
                       }}

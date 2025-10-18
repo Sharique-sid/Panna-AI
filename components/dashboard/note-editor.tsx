@@ -88,6 +88,7 @@ export function NoteEditor({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const { updateNote, toggleFavorite, deleteNote, createCategory, createNote } =
     useNotesStore();
@@ -140,8 +141,12 @@ export function NoteEditor({
   }, [hasUnsavedChanges, handleSave, isOnline]);
 
   const handleTitleChange = (value: string) => {
-    setTitle(value);
-    setHasUnsavedChanges(true);
+    // Trim whitespace and limit length
+    const trimmedValue = value.trim();
+    if (trimmedValue.length <= 100) {
+      setTitle(trimmedValue);
+      setHasUnsavedChanges(true);
+    }
   };
 
   const handleContentChange = (value: string) => {
@@ -583,7 +588,15 @@ export function NoteEditor({
           console.log('=== Global Ctrl+Shift+T detected! ===');
           console.log('Calling createNewNote()...');
           createNewNote();
-          console.log('=== createNewNote() call completed ===');
+          return;
+        }
+        
+        // Handle Ctrl+Shift+H for focusing title
+        if (e.shiftKey && key === 'h') {
+          e.preventDefault();
+          console.log('=== Global Ctrl+Shift+H detected! ===');
+          titleInputRef.current?.focus();
+          titleInputRef.current?.select();
           return;
         }
         
@@ -792,12 +805,30 @@ export function NoteEditor({
           </div>
 
           {/* Title */}
-          <Input
-            placeholder="Note title..."
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            className="text-lg lg:text-xl font-semibold border-0 px-0 focus-visible:ring-0 bg-transparent"
-          />
+          <div className="relative group">
+            <Input
+              ref={titleInputRef}
+              placeholder="Untitled Note"
+              value={title}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              className={cn(
+                "text-lg lg:text-xl font-semibold border-0 px-0 focus-visible:ring-0 bg-transparent",
+                "transition-all duration-200 ease-in-out",
+                "placeholder:text-muted-foreground/60 placeholder:font-normal",
+                "hover:bg-muted/30 focus:bg-muted/50 rounded-md px-2 py-1",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20",
+                "min-h-[2.5rem] flex items-center",
+                title ? "text-foreground" : "text-muted-foreground"
+              )}
+              maxLength={100}
+              autoFocus={!note}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  titleInputRef.current?.blur();
+                }
+              }}
+            />
+          </div>
 
           {/* Metadata and Tools */}
           <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 sm:items-center">
