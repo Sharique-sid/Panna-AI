@@ -29,6 +29,7 @@ import {
   PanelRightOpen,
   Image,
   X,
+  Sparkles,
 } from "lucide-react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import type { Note, Category } from "@/types";
@@ -139,6 +140,17 @@ export function NoteEditor({
 
     return () => clearTimeout(timer);
   }, [hasUnsavedChanges, handleSave, isOnline]);
+
+  // Auto-generate tags when content changes (debounced)
+  useEffect(() => {
+    if (!content || content.length < 50) return; // Don't generate for short content
+
+    const timer = setTimeout(() => {
+      handleGenerateTags();
+    }, 3000); // Wait 3 seconds after typing stops
+
+    return () => clearTimeout(timer);
+  }, [content]);
 
   const handleTitleChange = (value: string) => {
     // Limit length
@@ -312,13 +324,28 @@ export function NoteEditor({
   };
 
   const handleGenerateTags = async () => {
-    if (!content) return;
+    if (!content || tags.length >= 2) return; // Don't generate if content is empty or tags limit reached
+
     const suggestedTags = await generateTags(content, note?.id);
     if (suggestedTags && Array.isArray(suggestedTags)) {
-      const newTags = [...new Set([...tags, ...suggestedTags])];
+      // Calculate how many new tags we can add
+      const remainingSlots = 2 - tags.length;
+      if (remainingSlots <= 0) return;
+
+      const limitedTags = suggestedTags.slice(0, remainingSlots);
+      const newTags = [...new Set([...tags, ...limitedTags])];
       handleTagsChange(newTags);
     }
   };
+
+  // ... (rest of the code)
+
+  <SimpleTagInput
+    tags={tags}
+    onChange={handleTagsChange}
+    placeholder="Add tags..."
+    maxTags={2}
+  />
 
   const handleToggleFavorite = () => {
     if (note) {
@@ -852,6 +879,7 @@ export function NoteEditor({
                     tags={tags}
                     onChange={handleTagsChange}
                     placeholder="Add tags..."
+                    maxTags={2}
                   />
                   <input
                     type="file"

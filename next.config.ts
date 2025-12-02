@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// Polyfill localStorage for SSR if it's missing or broken (e.g. if it's an empty object)
+if (typeof global !== 'undefined' && (!global.localStorage || typeof global.localStorage.getItem !== 'function')) {
+  (global as any).localStorage = {
+    getItem: () => null,
+    setItem: () => { },
+    removeItem: () => { },
+    clear: () => { },
+    length: 0,
+    key: () => null,
+  };
+}
 
 const nextConfig: NextConfig = {
   typescript: {

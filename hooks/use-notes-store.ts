@@ -575,7 +575,16 @@ export const useNotesStore = create<NotesStore>()(
         searchQuery: state.searchQuery,
       }),
       // Add storage size limit to prevent 431 errors
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => {
+        if (typeof window !== 'undefined') {
+          return localStorage;
+        }
+        return {
+          getItem: () => null,
+          setItem: () => { },
+          removeItem: () => { },
+        };
+      }),
     }
   )
 );

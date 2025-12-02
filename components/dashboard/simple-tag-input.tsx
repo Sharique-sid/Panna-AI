@@ -12,6 +12,7 @@ interface SimpleTagInputProps {
   onChange: (tags: string[]) => void;
   placeholder?: string;
   className?: string;
+  maxTags?: number;
 }
 
 export function SimpleTagInput({
@@ -19,6 +20,7 @@ export function SimpleTagInput({
   onChange,
   placeholder = "Add tags...",
   className,
+  maxTags,
 }: SimpleTagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isInputVisible, setIsInputVisible] = useState(false);
@@ -71,32 +73,34 @@ export function SimpleTagInput({
         </Badge>
       ))}
 
-      {isInputVisible ? (
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={() => {
-            if (inputValue.trim()) {
-              addTag(inputValue);
-            } else {
-              setIsInputVisible(false);
-            }
-          }}
-          placeholder={placeholder}
-          className="h-6 w-32 text-xs border-dashed flex-shrink-0"
-          autoFocus
-        />
-      ) : (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsInputVisible(true)}
-          className="h-8 px-3 text-xs shrink-0"
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Add tag
-        </Button>
+      {(!maxTags || tags.length < maxTags) && (
+        isInputVisible ? (
+          <Input
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              if (inputValue.trim()) {
+                addTag(inputValue);
+              } else {
+                setIsInputVisible(false);
+              }
+            }}
+            placeholder={placeholder}
+            className="h-6 w-32 text-xs border-dashed flex-shrink-0"
+            autoFocus
+          />
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsInputVisible(true)}
+            className="h-8 px-3 text-xs shrink-0"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Add tag
+          </Button>
+        )
       )}
     </div>
   );
