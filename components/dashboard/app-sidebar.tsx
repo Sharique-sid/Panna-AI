@@ -10,6 +10,7 @@ import {
   Folder,
   Settings,
   LogOut,
+  Users,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
@@ -60,7 +61,7 @@ export function AppSidebar({
   const [newCategoryName, setNewCategoryName] = useState("");
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  
+
   // Avoid hydration mismatches for theme-dependent UI
   useEffect(() => {
     setMounted(true);
@@ -151,11 +152,10 @@ export function AppSidebar({
               }}
             />
           </button>
-          <span className={`font-bold text-xl ${
-            theme === 'dark' 
-              ? 'text-white' 
-              : 'text-black'
-          }`}>
+          <span className={`font-bold text-xl ${theme === 'dark'
+            ? 'text-white'
+            : 'text-black'
+            }`}>
             Panna.ai
           </span>
         </div>
@@ -186,6 +186,12 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => router.push("/collaborate")}>
+                  <Users className="h-4 w-4" />
+                  <span>Collaborate</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
