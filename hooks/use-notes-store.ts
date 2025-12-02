@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { Note, Category } from "@/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -36,7 +36,7 @@ interface NotesStore {
   createCategory: (name: string) => Promise<void>;
   updateCategory: (id: string, name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
-  
+
   // Real-time management
   cleanup: () => void;
 }
@@ -75,7 +75,7 @@ export const useNotesStore = create<NotesStore>()(
                 createdAt: payload.new.created_at,
                 updatedAt: payload.new.updated_at,
               };
-              
+
               set((state) => ({
                 notes: [newNote, ...state.notes],
               }));
@@ -106,29 +106,29 @@ export const useNotesStore = create<NotesStore>()(
                 notes: state.notes.map((note) =>
                   note.id === payload.new.id
                     ? {
-                        ...note,
-                        title: payload.new.title,
-                        content: payload.new.content,
-                        categoryId: payload.new.category_id,
-                        tags: payload.new.tags || [],
-                        isFavorite: payload.new.is_favorite,
-                        deletedAt: payload.new.deleted_at,
-                        updatedAt: payload.new.updated_at,
-                      }
+                      ...note,
+                      title: payload.new.title,
+                      content: payload.new.content,
+                      categoryId: payload.new.category_id,
+                      tags: payload.new.tags || [],
+                      isFavorite: payload.new.is_favorite,
+                      deletedAt: payload.new.deleted_at,
+                      updatedAt: payload.new.updated_at,
+                    }
                     : note
                 ),
                 selectedNote:
                   state.selectedNote?.id === payload.new.id
                     ? {
-                        ...state.selectedNote,
-                        title: payload.new.title,
-                        content: payload.new.content,
-                        categoryId: payload.new.category_id,
-                        tags: payload.new.tags || [],
-                        isFavorite: payload.new.is_favorite,
-                        deletedAt: payload.new.deleted_at,
-                        updatedAt: payload.new.updated_at,
-                      }
+                      ...state.selectedNote,
+                      title: payload.new.title,
+                      content: payload.new.content,
+                      categoryId: payload.new.category_id,
+                      tags: payload.new.tags || [],
+                      isFavorite: payload.new.is_favorite,
+                      deletedAt: payload.new.deleted_at,
+                      updatedAt: payload.new.updated_at,
+                    }
                     : state.selectedNote,
               }));
             }
@@ -213,7 +213,7 @@ export const useNotesStore = create<NotesStore>()(
             }));
 
             set({ notes, isLoading: false });
-            
+
             // Initialize real-time subscription after loading notes
             initRealtime();
           } catch (error: any) {
@@ -312,10 +312,10 @@ export const useNotesStore = create<NotesStore>()(
               selectedNote:
                 state.selectedNote?.id === id
                   ? {
-                      ...state.selectedNote,
-                      ...updates,
-                      updatedAt: new Date().toISOString(),
-                    }
+                    ...state.selectedNote,
+                    ...updates,
+                    updatedAt: new Date().toISOString(),
+                  }
                   : state.selectedNote,
             }));
           } catch (error: any) {
@@ -384,10 +384,10 @@ export const useNotesStore = create<NotesStore>()(
               notes: state.notes.map((note) =>
                 note.id === id
                   ? {
-                      ...note,
-                      deletedAt: null,
-                      updatedAt: new Date().toISOString(),
-                    }
+                    ...note,
+                    deletedAt: null,
+                    updatedAt: new Date().toISOString(),
+                  }
                   : note
               ),
             }));
@@ -460,18 +460,18 @@ export const useNotesStore = create<NotesStore>()(
               notes: state.notes.map((n) =>
                 n.id === id
                   ? {
-                      ...n,
-                      isFavorite: !n.isFavorite,
-                      updatedAt: new Date().toISOString(),
-                    }
+                    ...n,
+                    isFavorite: !n.isFavorite,
+                    updatedAt: new Date().toISOString(),
+                  }
                   : n
               ),
               selectedNote:
                 state.selectedNote?.id === id
                   ? {
-                      ...state.selectedNote,
-                      isFavorite: !state.selectedNote.isFavorite,
-                    }
+                    ...state.selectedNote,
+                    isFavorite: !state.selectedNote.isFavorite,
+                  }
                   : state.selectedNote,
             }));
           } catch (error: any) {
@@ -569,69 +569,13 @@ export const useNotesStore = create<NotesStore>()(
     },
     {
       name: "notes-store",
+      skipHydration: true,
       partialize: (state) => ({
         selectedCategory: state.selectedCategory,
         searchQuery: state.searchQuery,
       }),
       // Add storage size limit to prevent 431 errors
-      storage: {
-        getItem: (name: string) => {
-          try {
-            // Check if we're in browser environment
-            if (typeof window === 'undefined') {
-              return null;
-            }
-            
-            // Check if we're in bypass mode
-            if (window.location.pathname.includes('force-clear') || 
-                window.location.pathname.includes('bypass-storage') ||
-                sessionStorage.getItem('bypass-persistence') === 'true') {
-              return null;
-            }
-            
-            const item = localStorage.getItem(name);
-            if (item && item.length > 50000) { // 50KB limit (reduced)
-              console.warn("Storage item too large, clearing:", name);
-              localStorage.removeItem(name);
-              return null;
-            }
-            return item;
-          } catch (error) {
-            console.error("Error reading from storage:", error);
-            return null;
-          }
-        },
-        setItem: (name: string, value: string) => {
-          try {
-            // Check if we're in browser environment
-            if (typeof window === 'undefined') {
-              return;
-            }
-            
-            // Check if we're in bypass mode
-            if (sessionStorage.getItem('bypass-persistence') === 'true') {
-              return; // Don't save anything in bypass mode
-            }
-            
-            if (value.length > 50000) { // 50KB limit (reduced)
-              console.warn("Storage item too large, not saving:", name);
-              return;
-            }
-            localStorage.setItem(name, value);
-          } catch (error) {
-            console.error("Error writing to storage:", error);
-          }
-        },
-        removeItem: (name: string) => {
-          try {
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem(name);
-            }
-          } catch (error) {
-            console.error("Error removing from storage:", error);
-          }
-        },
-      },
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

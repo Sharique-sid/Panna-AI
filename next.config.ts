@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 
+
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
@@ -48,7 +49,6 @@ const nextConfig: NextConfig = {
   serverRuntimeConfig: {
     maxRequestSize: '10mb',
   },
-  /* config options here */
 };
 
 export default nextConfig;

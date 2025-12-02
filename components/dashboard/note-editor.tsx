@@ -141,10 +141,9 @@ export function NoteEditor({
   }, [hasUnsavedChanges, handleSave, isOnline]);
 
   const handleTitleChange = (value: string) => {
-    // Trim whitespace and limit length
-    const trimmedValue = value.trim();
-    if (trimmedValue.length <= 100) {
-      setTitle(trimmedValue);
+    // Limit length
+    if (value.length <= 100) {
+      setTitle(value);
       setHasUnsavedChanges(true);
     }
   };
@@ -162,12 +161,12 @@ export function NoteEditor({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = content.slice(start, end);
-    
+
     const newText = content.slice(0, start) + before + selectedText + after + content.slice(end);
     const newCursorPos = start + before.length + selectedText.length;
-    
+
     handleContentChange(newText);
-    
+
     // Set cursor position after the inserted text
     setTimeout(() => {
       textarea.setSelectionRange(newCursorPos, newCursorPos);
@@ -485,13 +484,13 @@ export function NoteEditor({
       const imageMarkdown = `![${file.name}](${publicUrl})`;
       const currentImages = extractImages(content);
       const cleanText = getCleanText(content);
-      
+
       // Add new image to the list
       const allImages = [...currentImages, publicUrl];
       const imageSection = allImages.length > 0 ? `${IMAGE_SECTION_MARKER}${allImages.map(url => `![Image](${url})`).join('\n')}` : '';
-      
+
       handleContentChange(cleanText + imageSection);
-      
+
       toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Image upload error:", error);
@@ -550,7 +549,7 @@ export function NoteEditor({
       } else if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   useEffect(() => {
@@ -568,11 +567,11 @@ export function NoteEditor({
         console.log('Key pressed:', e.key, 'Ctrl:', e.ctrlKey, 'Alt:', e.altKey, 'Shift:', e.shiftKey);
         console.log('Event target:', e.target);
       }
-      
+
       // Only handle shortcuts when the note editor is visible and focused
       if (e.ctrlKey || e.metaKey) {
         const key = e.key.toLowerCase();
-        
+
         // Handle Ctrl+Shift+E for preview toggle
         if (e.shiftKey && key === 'e') {
           e.preventDefault();
@@ -581,7 +580,7 @@ export function NoteEditor({
           console.log('Preview mode toggled to:', !isPreviewMode);
           return;
         }
-        
+
         // Handle Ctrl+Shift+T for new note
         if (e.shiftKey && key === 't') {
           e.preventDefault();
@@ -590,7 +589,7 @@ export function NoteEditor({
           createNewNote();
           return;
         }
-        
+
         // Handle Ctrl+Shift+H for focusing title
         if (e.shiftKey && key === 'h') {
           e.preventDefault();
@@ -599,7 +598,7 @@ export function NoteEditor({
           titleInputRef.current?.select();
           return;
         }
-        
+
         // Handle other shortcuts
         switch (key) {
           case 'b':
@@ -632,7 +631,7 @@ export function NoteEditor({
 
     // Add global event listener
     document.addEventListener('keydown', handleGlobalKeyDown);
-    
+
     // Cleanup
     return () => {
       document.removeEventListener('keydown', handleGlobalKeyDown);
@@ -649,13 +648,13 @@ export function NoteEditor({
           wordBreak: "break-word",
         }}
       >
-        <ReactMarkdown 
+        <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkBreaks]}
           components={{
             img: ({ src, alt }) => (
-              <img 
-                src={src} 
-                alt={alt} 
+              <img
+                src={src}
+                alt={alt}
                 className="max-w-full h-auto rounded-lg shadow-sm my-4"
                 style={{ maxHeight: '400px', objectFit: 'contain' }}
               />
@@ -896,7 +895,7 @@ export function NoteEditor({
           ) : (
             <div className={cn("h-full flex w-full transform transition-all duration-300", isFocusMode ? "translate-x-0" : "translate-x-0")} ref={containerRef}>
               {/* Left: Text Editor */}
-              <div className="overflow-hidden" style={{ 
+              <div className="overflow-hidden" style={{
                 width: hasImages ? `calc(100% - ${IMAGE_PANEL_WIDTH_PX}px)` : '100%',
                 flex: '1 1 auto'
               }}>
@@ -904,16 +903,16 @@ export function NoteEditor({
                   value={getCleanText(content)}
                   onChange={(e) => {
                     const cleanText = e.target.value;
-                     const images = extractImages(content);
-                     // Only add image markdown if there are actually images
-                     const imageMarkdown = images.length > 0 ? `${IMAGE_SECTION_MARKER}${images.map(url => `![Image](${url})`).join('\n')}` : '';
-                     // Ensure no image markdown leaks into the text area
-                     const sanitized = cleanText.replace(/!\[.*?\]\(.*?\)/g, '');
-                     handleContentChange(sanitized + imageMarkdown);
+                    const images = extractImages(content);
+                    // Only add image markdown if there are actually images
+                    const imageMarkdown = images.length > 0 ? `${IMAGE_SECTION_MARKER}${images.map(url => `![Image](${url})`).join('\n')}` : '';
+                    // Ensure no image markdown leaks into the text area
+                    const sanitized = cleanText.replace(/!\[.*?\]\(.*?\)/g, '');
+                    handleContentChange(sanitized + imageMarkdown);
                   }}
                   placeholder="Start writing here..."
                   className="w-full h-full resize-none border-0 focus-visible:ring-0 bg-transparent text-sm leading-relaxed p-4 whitespace-pre-wrap break-words"
-                  style={{ 
+                  style={{
                     whiteSpace: 'pre-wrap',
                     wordWrap: 'break-word',
                     wordBreak: 'normal',
@@ -922,18 +921,18 @@ export function NoteEditor({
                 />
               </div>
               {/* Divider for resizing */}
-               {/* Resizer removed for fixed image panel width */}
-              
+              {/* Resizer removed for fixed image panel width */}
+
               {/* Right: Image Gallery - keep visible in focus mode, fixed width */}
-               {hasImages && (
-                 <div className="overflow-auto border-l border-muted-foreground/20 bg-background/50" style={{ width: `${IMAGE_PANEL_WIDTH_PX}px`, flex: `0 0 ${IMAGE_PANEL_WIDTH_PX}px` }}>
+              {hasImages && (
+                <div className="overflow-auto border-l border-muted-foreground/20 bg-background/50" style={{ width: `${IMAGE_PANEL_WIDTH_PX}px`, flex: `0 0 ${IMAGE_PANEL_WIDTH_PX}px` }}>
                   <div className="p-4">
                     <h3 className="text-sm font-medium mb-3 text-muted-foreground text-center">Images</h3>
                     <div className="space-y-3">
                       {extractImages(content).map((imageUrl, index) => (
                         <div key={index} className="relative group">
-                          <img 
-                            src={imageUrl} 
+                          <img
+                            src={imageUrl}
                             alt={`Image ${index + 1}`}
                             className="w-full h-auto rounded-lg shadow-sm"
                             style={{ maxHeight: '150px', objectFit: 'contain' }}
