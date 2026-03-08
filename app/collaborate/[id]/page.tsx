@@ -112,6 +112,9 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
     const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [whiteboards, setWhiteboards] = useState<Array<{ id: string; x: number; y: number; width: number; height: number; data: string }>>([]);
+    const [textBoxes, setTextBoxes] = useState<Array<{ id: string; x: number; y: number; content: string; fontSize: number; color: string }>>([]);
+    const [draggedTextBoxId, setDraggedTextBoxId] = useState<string | null>(null);
+    const [textBoxDragOffset, setTextBoxDragOffset] = useState({ x: 0, y: 0 });
     const [myName, setMyName] = useState("");
     const [myColor] = useState(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
     const [isNameDialogOpen, setIsNameDialogOpen] = useState(true);
@@ -191,6 +194,9 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
             })
             .on('broadcast', { event: 'whiteboard_update' }, ({ payload }) => {
                 if (payload.whiteboards) setWhiteboards(payload.whiteboards);
+            })
+            .on('broadcast', { event: 'textbox_update' }, ({ payload }) => {
+                if (payload.textBoxes) setTextBoxes(payload.textBoxes);
             })
             .on('broadcast', { event: 'draw_event' }, ({ payload }) => {
                 window.dispatchEvent(new CustomEvent(`draw-${payload.whiteboardId}`, { detail: payload }));
@@ -330,6 +336,42 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
         channelRef.current?.send({ type: 'broadcast', event: 'whiteboard_update', payload: { whiteboards: newBoards } });
     };
 
+    const updateWhiteboardSize = (id: string, width: number, height: number) => {
+        setWhiteboards(prev => {
+            const newBoards = prev.map(w => w.id === id ? { ...w, width, height } : w);
+            channelRef.current?.send({ type: 'broadcast', event: 'whiteboard_update', payload: { whiteboards: newBoards } });
+            return newBoards;
+        });
+    };
+
+    const handleCanvasDoubleClick = (e: React.MouseEvent) => {
+        // Don't create text box if clicking on an existing element
+        if ((e.target as HTMLElement).closest('.tb-box, .wb-container, .card-el')) return;
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top + containerRef.current.scrollTop;
+        const newBox = { id: Math.random().toString(36).substr(2, 9), x, y, content: "", fontSize: 16, color: textColor };
+        const newBoxes = [...textBoxes, newBox];
+        setTextBoxes(newBoxes);
+        channelRef.current?.send({ type: 'broadcast', event: 'textbox_update', payload: { textBoxes: newBoxes } });
+    };
+
+    const handleTextBoxChange = (id: string, newContent: string) => {
+        const newBoxes = textBoxes.map(tb => tb.id === id ? { ...tb, content: newContent } : tb);
+        setTextBoxes(newBoxes);
+        channelRef.current?.send({ type: 'broadcast', event: 'textbox_update', payload: { textBoxes: newBoxes } });
+    };
+
+    const handleTextBoxMouseDown = (e: React.MouseEvent, tbId: string) => {
+        if ((e.target as HTMLElement).tagName === 'TEXTAREA') return;
+        e.stopPropagation();
+        const el = (e.currentTarget as HTMLElement);
+        const rect = el.getBoundingClientRect();
+        setTextBoxDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        setDraggedTextBoxId(tbId);
+    };
+
     const handleSave = async () => {
         const { error } = await supabase.from("notes").update({ title, content, updated_at: new Date().toISOString() }).eq("id", initialNote.id);
         if (error) toast.error("Failed to save"); else toast.success("Saved!");
@@ -384,6 +426,14 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
             return;
         }
 
+        if (draggedTextBoxId) {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const x = e.clientX - containerRect.left - textBoxDragOffset.x;
+            const y = e.clientY - containerRect.top + containerRef.current.scrollTop - textBoxDragOffset.y;
+            setTextBoxes(prev => prev.map(tb => tb.id === draggedTextBoxId ? { ...tb, x, y } : tb));
+            return;
+        }
+
         const now = Date.now();
         if (now - lastCursorBroadcast.current < 30) return; // throttle to ~33fps
         lastCursorBroadcast.current = now;
@@ -404,6 +454,10 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
         if (draggedCardId) {
             setDraggedCardId(null);
             channelRef.current?.send({ type: 'broadcast', event: 'card_update', payload: { cards } });
+        }
+        if (draggedTextBoxId) {
+            setDraggedTextBoxId(null);
+            channelRef.current?.send({ type: 'broadcast', event: 'textbox_update', payload: { textBoxes } });
         }
     };
 
@@ -487,6 +541,7 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
                     <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={insertWhiteboard} title="Whiteboard">
                         <ImageIcon className="h-4 w-4" />
                     </Button>
+                    <span className="text-[10px] text-muted-foreground/60 hidden sm:block ml-1 select-none">Double-click canvas to add text</span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -550,6 +605,7 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
                 onClick={(e) => {
                     if (e.target === containerRef.current || e.target === editorRef.current) editorRef.current?.focus();
                 }}
+                onDoubleClick={handleCanvasDoubleClick}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
@@ -564,6 +620,7 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
                         initialWidth={wb.width}
                         initialHeight={wb.height}
                         onMove={(x: number, y: number) => updateWhiteboardPosition(wb.id, x, y)}
+                        onResize={(w: number, h: number) => updateWhiteboardSize(wb.id, w, h)}
                         channel={channelRef.current}
                         onClose={() => {
                             const newBoards = whiteboards.filter(w => w.id !== wb.id);
@@ -602,6 +659,35 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
                             className="flex-1 bg-transparent resize-none border-none focus:outline-none text-sm leading-relaxed text-black/80 px-3 pb-3 min-h-[100px]"
                             placeholder="Type here..."
                             onMouseDown={e => e.stopPropagation()}
+                        />
+                    </div>
+                ))}
+
+                {/* Free-form Text Boxes — double-click anywhere to create */}
+                {textBoxes.map(tb => (
+                    <div
+                        key={tb.id}
+                        className="tb-box absolute z-25 group"
+                        style={{ left: tb.x, top: tb.y, minWidth: 120 }}
+                        onMouseDown={e => handleTextBoxMouseDown(e, tb.id)}
+                    >
+                        <div className="absolute -top-5 left-0 hidden group-hover:flex items-center gap-1 bg-black/70 rounded px-1 py-0.5">
+                            <button className="text-white/60 hover:text-red-400 text-[10px] px-1" onMouseDown={e => e.stopPropagation()} onClick={() => { const nb = textBoxes.filter(t => t.id !== tb.id); setTextBoxes(nb); channelRef.current?.send({ type: 'broadcast', event: 'textbox_update', payload: { textBoxes: nb } }); }}>✕</button>
+                            <input type="color" value={tb.color} onMouseDown={e => e.stopPropagation()} onChange={e => { const nb = textBoxes.map(t => t.id === tb.id ? { ...t, color: e.target.value } : t); setTextBoxes(nb); channelRef.current?.send({ type: 'broadcast', event: 'textbox_update', payload: { textBoxes: nb } }); }} className="w-4 h-4 p-0 border-0 cursor-pointer" title="Text color" />
+                            <select value={tb.fontSize} onMouseDown={e => e.stopPropagation()} onChange={e => { const nb = textBoxes.map(t => t.id === tb.id ? { ...t, fontSize: +e.target.value } : t); setTextBoxes(nb); channelRef.current?.send({ type: 'broadcast', event: 'textbox_update', payload: { textBoxes: nb } }); }} className="text-white text-[10px] bg-transparent border-0 cursor-pointer">
+                                {[12,14,16,20,24,32,48].map(s => <option key={s} value={s} className="text-black">{s}</option>)}
+                            </select>
+                        </div>
+                        <textarea
+                            value={tb.content}
+                            onChange={e => handleTextBoxChange(tb.id, e.target.value)}
+                            onMouseDown={e => e.stopPropagation()}
+                            autoFocus={tb.content === ""}
+                            placeholder="Type here…"
+                            className="bg-transparent border-0 border-b border-dashed border-gray-300 focus:border-gray-500 focus:outline-none resize-none overflow-hidden leading-snug"
+                            style={{ fontSize: tb.fontSize, color: tb.color, minWidth: 120, width: Math.max(120, tb.content.length * (tb.fontSize * 0.6) + 20) }}
+                            rows={1}
+                            onInput={e => { const el = e.currentTarget; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }}
                         />
                     </div>
                 ))}
@@ -676,11 +762,11 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
     );
 }
 
-function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initialHeight, onMove, channel, onClose }: any) {
+function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initialHeight, onMove, onResize, channel, onClose }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+    const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
     const [color, setColor] = useState("#000000");
     const [brushSize, setBrushSize] = useState(3);
     const [tool, setTool] = useState<'pen' | 'line' | 'rect' | 'circle'>('pen');
@@ -689,8 +775,24 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
     const [showGrid, setShowGrid] = useState(true);
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const lastDrawBroadcast = useRef(0);
+    const [size, setSize] = useState({ width: initialWidth, height: initialHeight });
+    const isResizing = useRef(false);
+    const resizeStart = useRef({ x: 0, y: 0, w: initialWidth, h: initialHeight });
 
+    // Sync size when remote resize arrives (initialWidth/Height props change)
+    useEffect(() => {
+        if (!isResizing.current) {
+            setSize({ width: initialWidth, height: initialHeight });
+        }
+    }, [initialWidth, initialHeight]);
+    const colorRef = useRef("#000000");
+    const brushSizeRef = useRef(3);
+
+    // Sync color/brushSize to refs so draw handlers always have current values
+    useEffect(() => { colorRef.current = color; }, [color]);
+    useEffect(() => { brushSizeRef.current = brushSize; }, [brushSize]);
+
+    // Initialise canvas only once on mount; resize preserves content
     useEffect(() => {
         if (!canvasRef.current) return;
         const canvas = canvasRef.current;
@@ -700,36 +802,80 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
         if (context) {
             context.lineCap = 'round';
             context.lineJoin = 'round';
-            setCtx(context);
+            ctxRef.current = context;
         }
     }, []);
 
+    // When size changes (resize), expand canvas while preserving drawn content
+    useEffect(() => {
+        if (!canvasRef.current || !ctxRef.current) return;
+        const canvas = canvasRef.current;
+        // Save current pixels
+        const imageData = ctxRef.current.getImageData(0, 0, canvas.width, canvas.height);
+        canvas.width = size.width;
+        canvas.height = size.height;
+        // Restore context settings (canvas resize resets them)
+        ctxRef.current.lineCap = 'round';
+        ctxRef.current.lineJoin = 'round';
+        ctxRef.current.strokeStyle = colorRef.current;
+        ctxRef.current.lineWidth = brushSizeRef.current;
+        // Restore drawn content
+        ctxRef.current.putImageData(imageData, 0, 0);
+    }, [size.width, size.height]);
+
+
+    const remotePenPos = useRef<{ x: number; y: number } | null>(null);
+
     useEffect(() => {
         const handleRemoteDraw = (e: CustomEvent) => {
-            const { type, x, y, color: rc, size, tool: rt, startX, startY } = e.detail;
-            if (!ctx) return;
-            ctx.save();
-            ctx.strokeStyle = rc;
-            ctx.lineWidth = size;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            if (type === 'start') { ctx.beginPath(); ctx.moveTo(x, y); }
-            else if (type === 'move' && rt === 'pen') { ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); }
-            else if (type === 'line') { ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(x, y); ctx.stroke(); }
-            else if (type === 'rect') { ctx.strokeRect(startX, startY, x - startX, y - startY); }
-            else if (type === 'circle') {
-                const rx = Math.abs(x - startX) / 2, ry = Math.abs(y - startY) / 2;
-                ctx.beginPath(); ctx.ellipse(startX + (x - startX) / 2, startY + (y - startY) / 2, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
+            const { type, x, y, color: rc, size: sz, tool: rt, startX, startY } = e.detail;
+            const c = ctxRef.current;
+            if (!c) return;
+
+            if (type === 'start') {
+                c.strokeStyle = rc;
+                c.lineWidth = sz;
+                c.lineCap = 'round';
+                c.lineJoin = 'round';
+                c.beginPath();
+                c.moveTo(x, y);
+                remotePenPos.current = { x, y };
+            } else if (type === 'move' && rt === 'pen') {
+                c.strokeStyle = rc;
+                c.lineWidth = sz;
+                c.lineCap = 'round';
+                c.lineJoin = 'round';
+                c.lineTo(x, y);
+                c.stroke();
+                c.beginPath();
+                c.moveTo(x, y);
+                remotePenPos.current = { x, y };
+            } else {
+                const prevStroke = c.strokeStyle;
+                const prevWidth = c.lineWidth;
+                c.strokeStyle = rc;
+                c.lineWidth = sz;
+                c.lineCap = 'round';
+                c.lineJoin = 'round';
+                if (type === 'line') { c.beginPath(); c.moveTo(startX, startY); c.lineTo(x, y); c.stroke(); }
+                else if (type === 'rect') { c.strokeRect(startX, startY, x - startX, y - startY); }
+                else if (type === 'circle') {
+                    const rx = Math.abs(x - startX) / 2, ry = Math.abs(y - startY) / 2;
+                    c.beginPath(); c.ellipse(startX + (x - startX) / 2, startY + (y - startY) / 2, rx, ry, 0, 0, 2 * Math.PI); c.stroke();
+                }
+                // Restore local drawing settings
+                c.strokeStyle = prevStroke;
+                c.lineWidth = prevWidth;
             }
-            ctx.restore();
         };
         window.addEventListener(`draw-${id}`, handleRemoteDraw as EventListener);
         return () => window.removeEventListener(`draw-${id}`, handleRemoteDraw as EventListener);
-    }, [ctx, id]);
+    }, [id]);
 
+    // Keep canvas strokeStyle/lineWidth in sync with local color/brush settings
     useEffect(() => {
-        if (ctx) { ctx.strokeStyle = color; ctx.lineWidth = brushSize; }
-    }, [color, brushSize, ctx]);
+        if (ctxRef.current) { ctxRef.current.strokeStyle = color; ctxRef.current.lineWidth = brushSize; }
+    }, [color, brushSize]);
 
     const getCoords = (e: React.MouseEvent | React.TouchEvent) => {
         if (!canvasRef.current) return { x: 0, y: 0 };
@@ -740,55 +886,52 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
     };
 
     const broadcastDraw = (type: string, x: number, y: number, startX?: number, startY?: number) => {
-        // Throttle draw broadcasts to 30fps for pen tool
-        if (type === 'move') {
-            const now = Date.now();
-            if (now - lastDrawBroadcast.current < 33) return;
-            lastDrawBroadcast.current = now;
-        }
-        channel?.send({ type: 'broadcast', event: 'draw_event', payload: { whiteboardId: id, type, x, y, color, size: brushSize, tool, startX, startY } });
+        channel?.send({ type: 'broadcast', event: 'draw_event', payload: { whiteboardId: id, type, x, y, color: colorRef.current, size: brushSizeRef.current, tool, startX, startY } });
     };
 
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
         if (isDragging) return;
         e.stopPropagation();
+        const c = ctxRef.current;
         setIsDrawing(true);
         const { x, y } = getCoords(e);
         if (tool === 'pen') {
-            ctx?.beginPath(); ctx?.moveTo(x, y); ctx?.lineTo(x, y); ctx?.stroke();
+            c?.beginPath(); c?.moveTo(x, y); c?.lineTo(x, y); c?.stroke();
             broadcastDraw('start', x, y);
         } else {
             setStartPoint({ x, y });
-            if (ctx && canvasRef.current) setSnapshot(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
+            if (c && canvasRef.current) setSnapshot(c.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
         }
     };
 
     const draw = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!isDrawing || !ctx || !canvasRef.current || !snapshot) return;
+        const c = ctxRef.current;
+        if (!isDrawing || !c || !canvasRef.current) return;
         e.stopPropagation(); e.preventDefault();
         const { x, y } = getCoords(e);
         if (tool === 'pen') {
-            ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
+            c.lineTo(x, y); c.stroke(); c.beginPath(); c.moveTo(x, y);
             broadcastDraw('move', x, y);
-        } else if (startPoint) {
-            ctx.putImageData(snapshot, 0, 0);
-            if (tool === 'line') { ctx.beginPath(); ctx.moveTo(startPoint.x, startPoint.y); ctx.lineTo(x, y); ctx.stroke(); }
-            else if (tool === 'rect') { ctx.strokeRect(startPoint.x, startPoint.y, x - startPoint.x, y - startPoint.y); }
+        } else if (startPoint && snapshot) {
+            c.putImageData(snapshot, 0, 0);
+            if (tool === 'line') { c.beginPath(); c.moveTo(startPoint.x, startPoint.y); c.lineTo(x, y); c.stroke(); }
+            else if (tool === 'rect') { c.strokeRect(startPoint.x, startPoint.y, x - startPoint.x, y - startPoint.y); }
             else if (tool === 'circle') {
                 const rx = Math.abs(x - startPoint.x) / 2, ry = Math.abs(y - startPoint.y) / 2;
-                ctx.beginPath(); ctx.ellipse(startPoint.x + (x - startPoint.x) / 2, startPoint.y + (y - startPoint.y) / 2, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
+                c.beginPath(); c.ellipse(startPoint.x + (x - startPoint.x) / 2, startPoint.y + (y - startPoint.y) / 2, rx, ry, 0, 0, 2 * Math.PI); c.stroke();
             }
         }
     };
 
     const stopDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+        const c = ctxRef.current;
         if (!isDrawing) return;
         setIsDrawing(false);
         if (startPoint && tool !== 'pen') {
             const { x, y } = getCoords(e);
             broadcastDraw(tool, x, y, startPoint.x, startPoint.y);
         }
-        ctx?.beginPath();
+        c?.beginPath();
         setSnapshot(null);
     };
 
@@ -807,6 +950,27 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
         return () => { window.removeEventListener('mousemove', handleDragMove); window.removeEventListener('mouseup', onUp); };
     }, [isDragging, dragOffset]);
 
+    // Resizing
+    useEffect(() => {
+        const handleResizeMove = (e: MouseEvent) => {
+            if (!isResizing.current) return;
+            const newW = Math.max(300, resizeStart.current.w + (e.clientX - resizeStart.current.x));
+            const newH = Math.max(200, resizeStart.current.h + (e.clientY - resizeStart.current.y));
+            setSize({ width: newW, height: newH });
+        };
+        const onUp = (e: MouseEvent) => {
+            if (isResizing.current) {
+                isResizing.current = false;
+                const newW = Math.max(300, resizeStart.current.w + (e.clientX - resizeStart.current.x));
+                const newH = Math.max(200, resizeStart.current.h + (e.clientY - resizeStart.current.y));
+                onResize?.(newW, newH);
+            }
+        };
+        window.addEventListener('mousemove', handleResizeMove);
+        window.addEventListener('mouseup', onUp);
+        return () => { window.removeEventListener('mousemove', handleResizeMove); window.removeEventListener('mouseup', onUp); };
+    }, [onResize]);
+
     const toolBtn = (t: typeof tool, icon: React.ReactNode, label: string) => (
         <button onClick={() => setTool(t)} className={`p-1 rounded transition-colors ${tool === t ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title={label}>
             {icon}
@@ -815,7 +979,7 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
 
     return (
         <div ref={containerRef} className="absolute bg-white shadow-2xl border rounded-xl flex flex-col z-30 overflow-hidden"
-            style={{ left: initialX, top: initialY, width: initialWidth, height: initialHeight + 44 }}
+            style={{ left: initialX, top: initialY, width: size.width, height: size.height + 44 }}
             onMouseDown={e => { if ((e.target as HTMLElement).closest('.wb-header')) { setIsDragging(true); const r = containerRef.current!.getBoundingClientRect(); setDragOffset({ x: e.clientX - r.left, y: e.clientY - r.top }); } }}
         >
             {/* Header */}
@@ -833,7 +997,7 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
                     <button onClick={() => setShowGrid(!showGrid)} className={`p-1 rounded transition-colors ${showGrid ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title="Toggle Grid">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
                     </button>
-                    <button onClick={() => { if (ctx && canvasRef.current) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); }} className="p-1 rounded hover:bg-red-100 transition-colors" title="Clear">
+                    <button onClick={() => { if (ctxRef.current && canvasRef.current) ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); }} className="p-1 rounded hover:bg-red-100 transition-colors" title="Clear">
                         <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
                 </div>
@@ -851,6 +1015,19 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
                     onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing}
                     onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
                 />
+                {/* Resize handle */}
+                <div
+                    className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-50 flex items-end justify-end pr-0.5 pb-0.5"
+                    onMouseDown={e => {
+                        e.stopPropagation();
+                        isResizing.current = true;
+                        resizeStart.current = { x: e.clientX, y: e.clientY, w: size.width, h: size.height };
+                    }}
+                >
+                    <svg width="10" height="10" viewBox="0 0 10 10" className="text-gray-400">
+                        <path d="M1 9L9 1M5 9L9 5M9 9L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                </div>
             </div>
         </div>
     );
