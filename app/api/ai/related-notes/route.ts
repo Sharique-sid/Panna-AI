@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "@/lib/gemini"
+import { generateText, GeminiError } from "@/lib/gemini"
 import { createClient } from "@/lib/supabase/server"
+import { aiRatelimit } from "@/lib/rate-limit"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +12,11 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { success } = await aiRatelimit.limit(user.id)
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 })
     }
 
     const { content, excludeNoteId } = await request.json()
@@ -74,6 +80,11 @@ ${notesForAnalysis}`
 
     return NextResponse.json({ result: relatedIds })
   } catch (error) {
+    if (error instanceof GeminiError) {
+      const status = error.code === "RATE_LIMITED" ? 429 : error.code === "CONTENT_BLOCKED" ? 422 : 503;
+      console.error("AI Related Notes Error:", error.message, { code: error.code })
+      return NextResponse.json({ error: error.message }, { status })
+    }
     console.error("AI Related Notes Error:", error)
     return NextResponse.json({ error: "Failed to find related notes" }, { status: 500 })
   }

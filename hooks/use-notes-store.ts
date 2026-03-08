@@ -128,7 +128,7 @@ export const useNotesStore = create<NotesStore>()(
                       isFavorite: payload.new.is_favorite,
                       deletedAt: payload.new.deleted_at,
                       updatedAt: payload.new.updated_at,
-                    }
+                    } as Note
                     : state.selectedNote,
               }));
             }

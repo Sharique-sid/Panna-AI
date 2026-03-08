@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const token = authHeader.split(' ')[1];
 
     // Create Supabase client
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Verify the JWT token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);

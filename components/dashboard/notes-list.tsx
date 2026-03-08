@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 interface NotesListProps {
   notes: Note[];
   selectedNote: Note | null;
-  selectedCategory: string;
+  selectedCategory: string | null;
   onNoteSelect: (note: Note) => void;
   isLoading?: boolean;
   className?: string;
@@ -316,7 +316,7 @@ export function NotesList({
                       </div>
 
                       <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed break-words">
-                        {note.content?.replace(/[#*`]/g, "").replace(/!\[.*?\]\(.*?\)/g, "").replace(/<!-- Images -->.*$/s, "").trim() || "No content"}
+                        {note.content?.replace(/[#*`]/g, "").replace(/!\[.*?\]\(.*?\)/g, "").replace(/<!-- Images -->[\s\S]*$/, "").trim() || "No content"}
                       </p>
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground">

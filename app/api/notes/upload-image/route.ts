@@ -44,11 +44,9 @@ export async function POST(request: NextRequest) {
       .from("note-images")
       .createSignedUploadUrl(uniqueFileName, {
         upsert: false,
-        contentType: fileType,
       });
 
     if (uploadError) {
-      console.error("Upload URL creation error:", uploadError);
       return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 });
     }
 
@@ -59,7 +57,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Image upload error:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
     }

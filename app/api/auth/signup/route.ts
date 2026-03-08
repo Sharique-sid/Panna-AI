@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { authRatelimit } from "@/lib/rate-limit";
 
 const signUpSchema = z.object({
   firstName: z.string().min(2),
@@ -11,6 +12,12 @@ const signUpSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+    const { success } = await authRatelimit.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 });
+    }
+
     const body = await request.json();
     const { firstName, lastName, email, password } = signUpSchema.parse(body);
 
@@ -34,7 +41,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ user: data.user, session: data.session });
   } catch (error) {
-    console.log("Error during signup:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid input data" },

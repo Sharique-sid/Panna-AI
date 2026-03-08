@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
+import { authRatelimit } from "@/lib/rate-limit"
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -9,6 +10,12 @@ const signInSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for") ?? "unknown"
+    const { success } = await authRatelimit.limit(ip)
+    if (!success) {
+      return NextResponse.json({ error: "Too many requests. Please wait a moment." }, { status: 429 })
+    }
+
     const body = await request.json()
     const { email, password } = signInSchema.parse(body)
 

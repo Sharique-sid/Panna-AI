@@ -25,7 +25,7 @@ export function AnimatedLogo({ onLogoClick }: AnimatedLogoProps) {
     }
   ]);
   const logoRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(undefined);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Physics constants

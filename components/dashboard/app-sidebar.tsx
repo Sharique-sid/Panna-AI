@@ -123,6 +123,12 @@ export function AppSidebar({
       icon: Trash2,
       count: notes.filter((n) => n.deletedAt).length,
     },
+    {
+      id: "collaborate",
+      label: "Collaborate",
+      icon: Users,
+      count: 0,
+    },
   ];
 
   if (!mounted) {
@@ -166,7 +172,7 @@ export function AppSidebar({
         </Button>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 overflow-hidden bg-sidebar/95">
+      <SidebarContent className="px-3 bg-sidebar/95">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -174,7 +180,7 @@ export function AppSidebar({
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     isActive={selectedCategory === item.id}
-                    onClick={() => onCategorySelect(item.id)}
+                    onClick={() => item.id === "collaborate" ? router.push("/collaborate") : onCategorySelect(item.id)}
                   >
                     <item.icon className="h-4 w-4" />
                     <span className="flex-1">{item.label}</span>
@@ -186,12 +192,6 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => router.push("/collaborate")}>
-                  <Users className="h-4 w-4" />
-                  <span>Collaborate</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -1,34 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { NoteEditor } from "@/components/dashboard/note-editor";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Share2, Bold, Italic, List, Minus, Save, Download, Image as ImageIcon, StickyNote, X, Type } from "lucide-react";
+import { Loader2, ArrowLeft, Share2, Bold, Italic, List, Minus, Save, Download, ImageIcon, StickyNote, X, Type, Undo, Redo, Square, Circle, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { Note } from "@/types";
 
-// Helper to get cursor coordinates in ContentEditable
 const getCaretCoordinates = () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return null;
-
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
-
-    // If rect is empty (e.g. new line), try to get a better position
-    if (rect.width === 0 && rect.height === 0) {
-        // Fallback or more complex logic could go here
-        // For now, let's trust the browser or use a span trick if needed
-        // But usually getBoundingClientRect works for collapsed ranges too in modern browsers
-    }
-
-    return {
-        x: rect.left,
-        y: rect.top,
-        height: rect.height
-    };
+    return { x: rect.left, y: rect.top, height: rect.height };
 };
 
 export default function CollaborationSessionPage() {
@@ -47,10 +32,7 @@ export default function CollaborationSessionPage() {
                     .select("*")
                     .eq("public_share_id", id)
                     .single();
-
                 if (error) throw error;
-
-                // Transform to Note type
                 const fetchedNote: Note = {
                     id: data.id,
                     userId: data.user_id,
@@ -62,25 +44,19 @@ export default function CollaborationSessionPage() {
                     deletedAt: data.deleted_at,
                     createdAt: data.created_at,
                     updatedAt: data.updated_at,
-                    // @ts-ignore
                     isPublic: data.is_public,
                     publicShareId: data.public_share_id
-                };
-
+                } as Note;
                 setNote(fetchedNote);
             } catch (error) {
-                console.error("Error fetching session:", error);
                 toast.error("Session not found or expired");
                 router.push("/collaborate");
             } finally {
                 setLoading(false);
             }
         };
-
-        if (id) {
-            fetchNote();
-        }
-    }, [id, router, supabase]);
+        if (id) fetchNote();
+    }, [id]);
 
     if (loading) {
         return (
@@ -95,46 +71,32 @@ export default function CollaborationSessionPage() {
 
     return (
         <div className="h-screen flex flex-col bg-background">
-            {/* Session Header */}
-            <header className="h-14 border-b flex items-center justify-between px-4 bg-card">
+            <header className="h-14 border-b flex items-center justify-between px-4 bg-card shrink-0">
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={() => router.push("/collaborate")}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Exit
                     </Button>
                     <div className="h-4 w-px bg-border mx-2" />
-                    <span className="font-semibold">Session: {id}</span>
+                    <span className="font-semibold text-sm truncate max-w-[200px]">Session: {id}</span>
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                         Live
                     </span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            toast.success("Link copied to clipboard!");
-                        }}
-                    >
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share Link
-                    </Button>
-                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast.success("Link copied!");
+                    }}
+                >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                </Button>
             </header>
-
-            {/* Editor Area */}
             <div className="flex-1 overflow-hidden">
-                {/* We reuse NoteEditor but we need to handle updates differently since it relies on store */}
-                {/* For now, we pass the note. The internal save logic in NoteEditor calls updateNote from store. */}
-                {/* We need to mock the store or modify NoteEditor to accept an onSave prop? */}
-                {/* Actually, NoteEditor uses useNotesStore directly. This is a problem for guest users. */}
-                {/* Quick fix: We will render a simplified editor here instead of the full NoteEditor if we are a guest. */}
-                {/* Or we can wrap NoteEditor in a provider? No, Zustand is global. */}
-
-                {/* Let's use a simplified Textarea for now to prove the concept, or modify NoteEditor. */}
-                {/* Modifying NoteEditor is risky. Let's create a SimpleCollaborativeEditor. */}
                 <SimpleCollaborativeEditor initialNote={note} />
             </div>
         </div>
@@ -144,46 +106,53 @@ export default function CollaborationSessionPage() {
 function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
     const [content, setContent] = useState(initialNote.content || "");
     const [title, setTitle] = useState(initialNote.title || "");
-    // @ts-ignore
-    const [noteColor, setNoteColor] = useState(initialNote.color || "#ffffff");
+    const [noteColor, setNoteColor] = useState((initialNote as any).color || "#ffffff");
     const [textColor, setTextColor] = useState("#000000");
-    const [cards, setCards] = useState<Array<{ id: string, x: number, y: number, content: string, color: string }>>([]);
+    const [cards, setCards] = useState<Array<{ id: string; x: number; y: number; content: string; color: string }>>([]);
     const [draggedCardId, setDraggedCardId] = useState<string | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
+    const [whiteboards, setWhiteboards] = useState<Array<{ id: string; x: number; y: number; width: number; height: number; data: string }>>([]);
+    const [myName, setMyName] = useState("");
+    const [myColor] = useState(() => `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
+    const [isNameDialogOpen, setIsNameDialogOpen] = useState(true);
+    const [isConnected, setIsConnected] = useState(false);
+    const [onlineUsers, setOnlineUsers] = useState<Array<{ name: string; color: string }>>([]);
     const [cursors, setCursors] = useState<Record<string, {
-        x: number;
-        y: number;
-        color: string;
-        name: string;
-        isTyping: boolean;
-        selectionRects?: { x: number; y: number; width: number; height: number }[];
+        x: number; y: number; color: string; name: string;
+        isTyping: boolean; selectionRects?: { x: number; y: number; width: number; height: number }[];
     }>>({});
 
-    // User Identity
-    // User Identity
-    const [myName, setMyName] = useState("");
-    const [myColor] = useState(() => '#' + Math.floor(Math.random() * 16777215).toString(16));
-    const [isNameDialogOpen, setIsNameDialogOpen] = useState(true);
-    const [whiteboards, setWhiteboards] = useState<Array<{ id: string, x: number, y: number, width: number, height: number, data: string }>>([]);
+    // Undo/Redo history
+    const history = useRef<string[]>([initialNote.content || ""]);
+    const historyIndex = useRef(0);
+    const isUndoRedo = useRef(false);
 
-    // Refs
     const containerRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<HTMLDivElement>(null);
-    const isLocalUpdate = useRef(false);
-    const supabase = useState(() => createClient())[0];
-    const channelRef = useState<ReturnType<typeof supabase.channel> | null>(null);
+    const supabase = useRef(createClient()).current;
+    const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-    // Initial Content Setup
+    // Throttle refs
+    const lastCursorBroadcast = useRef(0);
+    const cardContentTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+    // Debounced card content broadcast
+    const broadcastCardContent = useCallback((updatedCards: typeof cards) => {
+        if (channelRef.current) {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'card_update',
+                payload: { cards: updatedCards }
+            });
+        }
+    }, []);
+
     useEffect(() => {
-        if (editorRef.current && initialNote.content) {
-            if (!editorRef.current.innerHTML) {
-                editorRef.current.innerHTML = initialNote.content;
-            }
+        if (editorRef.current && initialNote.content && !editorRef.current.innerHTML) {
+            editorRef.current.innerHTML = initialNote.content;
         }
     }, [initialNote.content]);
 
-    // Check for existing user session to auto-fill name
     useEffect(() => {
         const checkUser = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -194,561 +163,398 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
             }
         };
         checkUser();
-    }, [supabase]);
+    }, []);
 
-    // Realtime subscription (Broadcast + Presence)
     useEffect(() => {
         if (!myName) return;
 
-        if (channelRef[0]) {
-            supabase.removeChannel(channelRef[0]);
-        }
+        if (channelRef.current) supabase.removeChannel(channelRef.current);
 
         const channel = supabase.channel(`note-${initialNote.id}`, {
-            config: {
-                presence: { key: myName },
-                broadcast: { self: false }
-            },
+            config: { presence: { key: myName }, broadcast: { self: false } },
         });
 
         channel
-            .on('broadcast', { event: 'text_update' }, (payload) => {
-                if (payload.payload.content !== undefined) {
-                    setContent(payload.payload.content);
-                    if (editorRef.current && editorRef.current.innerHTML !== payload.payload.content) {
-                        editorRef.current.innerHTML = payload.payload.content;
+            .on('broadcast', { event: 'text_update' }, ({ payload }) => {
+                if (payload.content !== undefined && editorRef.current) {
+                    setContent(payload.content);
+                    if (editorRef.current.innerHTML !== payload.content) {
+                        editorRef.current.innerHTML = payload.content;
                     }
                 }
-                if (payload.payload.title !== undefined && payload.payload.title !== title) {
-                    setTitle(payload.payload.title);
-                }
-                if (payload.payload.color !== undefined && payload.payload.color !== noteColor) {
-                    setNoteColor(payload.payload.color);
-                }
-                if (payload.payload.textColor !== undefined && payload.payload.textColor !== textColor) {
-                    setTextColor(payload.payload.textColor);
-                }
+                if (payload.title !== undefined) setTitle(payload.title);
+                if (payload.color !== undefined) setNoteColor(payload.color);
+                if (payload.textColor !== undefined) setTextColor(payload.textColor);
             })
-            .on('broadcast', { event: 'card_update' }, (payload) => {
-                if (payload.payload.cards) {
-                    setCards(payload.payload.cards);
-                }
+            .on('broadcast', { event: 'card_update' }, ({ payload }) => {
+                if (payload.cards) setCards(payload.cards);
             })
-            .on('broadcast', { event: 'whiteboard_update' }, (payload) => {
-                if (payload.payload.whiteboards) {
-                    setWhiteboards(payload.payload.whiteboards);
-                }
+            .on('broadcast', { event: 'whiteboard_update' }, ({ payload }) => {
+                if (payload.whiteboards) setWhiteboards(payload.whiteboards);
             })
-            .on('broadcast', { event: 'draw_event' }, (payload) => {
-                // Dispatch event to specific canvas
-                const event = new CustomEvent(`draw-${payload.payload.whiteboardId}`, { detail: payload.payload });
-                window.dispatchEvent(event);
+            .on('broadcast', { event: 'draw_event' }, ({ payload }) => {
+                window.dispatchEvent(new CustomEvent(`draw-${payload.whiteboardId}`, { detail: payload }));
             })
-            .on('broadcast', { event: 'cursor_move' }, (payload) => {
-                setCursors((prev) => ({
+            .on('broadcast', { event: 'cursor_move' }, ({ payload }) => {
+                setCursors(prev => ({
                     ...prev,
-                    [payload.payload.user]: {
-                        x: payload.payload.x,
-                        y: payload.payload.y,
-                        color: payload.payload.color,
-                        name: payload.payload.user,
-                        isTyping: payload.payload.isTyping,
-                        selectionRects: payload.payload.selectionRects
+                    [payload.user]: {
+                        x: payload.x, y: payload.y,
+                        color: payload.color, name: payload.user,
+                        isTyping: payload.isTyping,
+                        selectionRects: payload.selectionRects
                     }
                 }));
             })
+            .on('presence', { event: 'sync' }, () => {
+                const state = channel.presenceState();
+                const users = Object.values(state).flat().map((u: any) => ({
+                    name: u.user,
+                    color: u.color || myColor
+                }));
+                setOnlineUsers(users);
+            })
             .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED') {
-                    await channel.track({ user: myName, online_at: new Date().toISOString() });
+                    setIsConnected(true);
+                    await channel.track({ user: myName, color: myColor, online_at: new Date().toISOString() });
+                } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                    setIsConnected(false);
                 }
             });
 
-        channelRef[1](channel);
+        channelRef.current = channel;
+        return () => { supabase.removeChannel(channel); };
+    }, [myName, initialNote.id]);
 
-        return () => {
-            supabase.removeChannel(channel);
-            channelRef[1](null);
+    const pushHistory = useCallback((html: string) => {
+        if (isUndoRedo.current) return;
+        const newHistory = history.current.slice(0, historyIndex.current + 1);
+        newHistory.push(html);
+        if (newHistory.length > 100) newHistory.shift();
+        history.current = newHistory;
+        historyIndex.current = newHistory.length - 1;
+    }, []);
+
+    const handleUndo = useCallback(() => {
+        if (historyIndex.current <= 0) return;
+        historyIndex.current--;
+        const prev = history.current[historyIndex.current];
+        isUndoRedo.current = true;
+        setContent(prev);
+        if (editorRef.current) editorRef.current.innerHTML = prev;
+        isUndoRedo.current = false;
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content: prev, title, color: noteColor, textColor } });
+    }, [title, noteColor, textColor]);
+
+    const handleRedo = useCallback(() => {
+        if (historyIndex.current >= history.current.length - 1) return;
+        historyIndex.current++;
+        const next = history.current[historyIndex.current];
+        isUndoRedo.current = true;
+        setContent(next);
+        if (editorRef.current) editorRef.current.innerHTML = next;
+        isUndoRedo.current = false;
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content: next, title, color: noteColor, textColor } });
+    }, [title, noteColor, textColor]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) handleRedo(); else handleUndo();
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === 'y') { e.preventDefault(); handleRedo(); }
         };
-    }, [initialNote.id, supabase, myName]);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [handleUndo, handleRedo]);
 
-    // Broadcast changes
     const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
         const newContent = e.currentTarget.innerHTML;
-        isLocalUpdate.current = true;
         setContent(newContent);
-
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'text_update',
-                payload: { content: newContent, title, color: noteColor, textColor }
-            });
-
-            updateCaretPosition(true);
-        }
+        pushHistory(newContent);
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content: newContent, title, color: noteColor, textColor } });
+        updateCaretPosition(true);
     };
 
     const handleTitleChange = (newTitle: string) => {
         setTitle(newTitle);
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'text_update',
-                payload: { content, title: newTitle, color: noteColor, textColor }
-            });
-        }
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content, title: newTitle, color: noteColor, textColor } });
     };
 
     const handleColorChange = (newColor: string) => {
         setNoteColor(newColor);
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'text_update',
-                payload: { content, title, color: newColor, textColor }
-            });
-        }
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content, title, color: newColor, textColor } });
     };
 
     const handleTextColorChange = (newColor: string) => {
         setTextColor(newColor);
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'text_update',
-                payload: { content, title, color: noteColor, textColor: newColor }
-            });
-        }
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content, title, color: noteColor, textColor: newColor } });
     };
 
     const insertCard = () => {
-        const newCard = {
-            id: Math.random().toString(36).substr(2, 9),
-            x: 100,
-            y: 100,
-            content: "New Card",
-            color: "#fef3c7" // Yellow-100
-        };
+        const newCard = { id: Math.random().toString(36).substr(2, 9), x: 100 + cards.length * 20, y: 100 + cards.length * 20, content: "New Note", color: "#fef3c7" };
         const newCards = [...cards, newCard];
         setCards(newCards);
-
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'card_update',
-                payload: { cards: newCards }
-            });
-        }
+        channelRef.current?.send({ type: 'broadcast', event: 'card_update', payload: { cards: newCards } });
     };
 
     const handleCardMouseDown = (e: React.MouseEvent, cardId: string) => {
-        e.stopPropagation(); // Prevent editor focus/caret changes
+        e.stopPropagation();
         const card = cards.find(c => c.id === cardId);
         if (!card) return;
-
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        setDragOffset({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        });
+        setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
         setDraggedCardId(cardId);
     };
 
     const handleCardContentChange = (id: string, newContent: string) => {
         const newCards = cards.map(c => c.id === id ? { ...c, content: newContent } : c);
         setCards(newCards);
-        // Debounce broadcast for content? For now, instant.
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'card_update',
-                payload: { cards: newCards }
-            });
-        }
+        // Debounce card content broadcast to 150ms
+        clearTimeout(cardContentTimers.current[id]);
+        cardContentTimers.current[id] = setTimeout(() => broadcastCardContent(newCards), 150);
     };
 
     const insertWhiteboard = () => {
-        const newBoard = {
-            id: Math.random().toString(36).substr(2, 9),
-            x: 150,
-            y: 150,
-            width: 600,
-            height: 400,
-            data: "" // Initial empty state
-        };
+        const newBoard = { id: Math.random().toString(36).substr(2, 9), x: 150, y: 150, width: 600, height: 400, data: "" };
         const newBoards = [...whiteboards, newBoard];
         setWhiteboards(newBoards);
-
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'whiteboard_update',
-                payload: { whiteboards: newBoards }
-            });
-        }
+        channelRef.current?.send({ type: 'broadcast', event: 'whiteboard_update', payload: { whiteboards: newBoards } });
     };
 
     const updateWhiteboardPosition = (id: string, x: number, y: number) => {
         const newBoards = whiteboards.map(w => w.id === id ? { ...w, x, y } : w);
         setWhiteboards(newBoards);
-        if (channelRef[0]) {
-            channelRef[0].send({
-                type: 'broadcast',
-                event: 'whiteboard_update',
-                payload: { whiteboards: newBoards }
-            });
-        }
+        channelRef.current?.send({ type: 'broadcast', event: 'whiteboard_update', payload: { whiteboards: newBoards } });
     };
 
     const handleSave = async () => {
-        const { error } = await supabase
-            .from("notes")
-            .update({
-                title,
-                content,
-                // @ts-ignore
-                color: noteColor,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", initialNote.id);
-
-        if (error) {
-            toast.error("Failed to save: " + error.message);
-        } else {
-            toast.success("Saved successfully!");
-        }
+        const { error } = await supabase.from("notes").update({ title, content, updated_at: new Date().toISOString() }).eq("id", initialNote.id);
+        if (error) toast.error("Failed to save"); else toast.success("Saved!");
     };
 
-    const handleDownloadPDF = () => {
-        window.print();
-    };
-
-    // Helper to get selection rects
     const getSelectionRects = () => {
         if (!containerRef.current) return [];
         const selection = window.getSelection();
         if (!selection || selection.rangeCount === 0) return [];
-
         const range = selection.getRangeAt(0);
-        const rects = range.getClientRects();
         const containerRect = containerRef.current.getBoundingClientRect();
-
-        return Array.from(rects).map(rect => ({
+        return Array.from(range.getClientRects()).map(rect => ({
             x: rect.left - containerRect.left,
             y: rect.top - containerRect.top + containerRef.current!.scrollTop,
-            width: rect.width,
-            height: rect.height
+            width: rect.width, height: rect.height
         }));
     };
 
-    // Helper to calculate and broadcast caret position
-    const updateCaretPosition = (isTyping: boolean = false) => {
-        if (!containerRef.current || !channelRef[0]) return;
-
+    const updateCaretPosition = (isTyping = false) => {
+        if (!containerRef.current || !channelRef.current) return;
         const coords = getCaretCoordinates();
         if (!coords) return;
-
         const containerRect = containerRef.current.getBoundingClientRect();
-        const relativeX = coords.x - containerRect.left;
-        const relativeY = coords.y - containerRect.top + containerRef.current.scrollTop;
-
-        const selectionRects = getSelectionRects();
-
-        channelRef[0].send({
-            type: 'broadcast',
-            event: 'cursor_move',
+        channelRef.current.send({
+            type: 'broadcast', event: 'cursor_move',
             payload: {
-                x: relativeX,
-                y: relativeY,
-                color: myColor,
-                user: myName,
-                isTyping,
-                selectionRects
+                x: coords.x - containerRect.left,
+                y: coords.y - containerRect.top + containerRef.current.scrollTop,
+                color: myColor, user: myName, isTyping,
+                selectionRects: getSelectionRects()
             }
         });
     };
 
-    // Listen for selection changes
     useEffect(() => {
         const handleSelectionChange = () => {
-            // Only broadcast if we have focus in the editor
-            if (document.activeElement === editorRef.current) {
-                updateCaretPosition(false); // Not necessarily typing, just selecting
-            }
+            if (document.activeElement === editorRef.current) updateCaretPosition(false);
         };
-
         document.addEventListener('selectionchange', handleSelectionChange);
         return () => document.removeEventListener('selectionchange', handleSelectionChange);
-    }, []);
+    }, [myName, myColor]);
 
-    // Broadcast cursor (Mouse)
+    // Throttled cursor broadcast — max 33fps
     const handleMouseMove = (e: React.MouseEvent) => {
         if (!containerRef.current) return;
 
-        // Handle Dragging
         if (draggedCardId) {
             const containerRect = containerRef.current.getBoundingClientRect();
             const x = e.clientX - containerRect.left - dragOffset.x;
             const y = e.clientY - containerRect.top + containerRef.current.scrollTop - dragOffset.y;
-
             setCards(prev => prev.map(c => c.id === draggedCardId ? { ...c, x, y } : c));
             return;
         }
 
-        if (!channelRef[0]) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top + containerRef.current.scrollTop;
+        const now = Date.now();
+        if (now - lastCursorBroadcast.current < 30) return; // throttle to ~33fps
+        lastCursorBroadcast.current = now;
 
-        channelRef[0].send({
-            type: 'broadcast',
-            event: 'cursor_move',
-            payload: { x, y, color: myColor, user: myName, isTyping: false }
+        if (!channelRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        channelRef.current.send({
+            type: 'broadcast', event: 'cursor_move',
+            payload: {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top + containerRef.current.scrollTop,
+                color: myColor, user: myName, isTyping: false
+            }
         });
     };
 
     const handleMouseUp = () => {
         if (draggedCardId) {
             setDraggedCardId(null);
-            // Broadcast final position
-            if (channelRef[0]) {
-                channelRef[0].send({
-                    type: 'broadcast',
-                    event: 'card_update',
-                    payload: { cards }
-                });
-            }
+            channelRef.current?.send({ type: 'broadcast', event: 'card_update', payload: { cards } });
         }
     };
 
-    // Handle "Write Anywhere"
-    const handleContainerClick = (e: React.MouseEvent) => {
-        // Allow clicking on container or the editor div itself (if clicking below text)
-        if (e.target !== containerRef.current && e.target !== editorRef.current) return;
-
-        const editor = editorRef.current;
-        if (!editor) return;
-
-        // Get the bounding rect of the editor content
-        // We need to find where the actual text ends.
-        // If the editor is empty, top is the start.
-        // If it has content, we look at the last child or the rect itself.
-
-        // Simple approach: Check distance from the top of the editor
-        const rect = editor.getBoundingClientRect();
-        const clickYRelativeToEditor = e.clientY - rect.top;
-
-        // Estimate current content height
-        // We can't easily get "content height" of a contentEditable with min-height without checking children
-        // But we can check if the click is *below* the last element.
-
-        let lastChildBottom = 0;
-        if (editor.lastElementChild) {
-            lastChildBottom = editor.lastElementChild.getBoundingClientRect().bottom - rect.top;
-        } else {
-            // Empty editor
-            lastChildBottom = 0;
-        }
-
-        // If we clicked below the last child (plus some buffer), add lines
-        if (clickYRelativeToEditor > lastChildBottom + 10) {
-            const gap = clickYRelativeToEditor - lastChildBottom;
-            const lineHeight = 30; // Approx for text-lg leading-relaxed
-            const linesToAdd = Math.floor(gap / lineHeight);
-
-            if (linesToAdd > 0) {
-                let newHtml = editor.innerHTML;
-                // If empty, we might need a starting line? contentEditable handles it.
-                for (let i = 0; i < linesToAdd; i++) {
-                    newHtml += "<br>";
-                }
-
-                setContent(newHtml);
-                editor.innerHTML = newHtml;
-
-                if (channelRef[0]) {
-                    channelRef[0].send({
-                        type: 'broadcast',
-                        event: 'text_update',
-                        payload: { content: newHtml, title, color: noteColor }
-                    });
-                }
-
-                // Move caret to end
-                setTimeout(() => {
-                    editor.focus();
-                    const range = document.createRange();
-                    range.selectNodeContents(editor);
-                    range.collapse(false);
-                    const sel = window.getSelection();
-                    sel?.removeAllRanges();
-                    sel?.addRange(range);
-                }, 0);
-            } else {
-                editor.focus();
-            }
-        } else {
-            // Clicked on or near existing text, let default behavior handle focus/caret
-            if (e.target === containerRef.current) {
-                editor.focus();
-            }
-        }
-    };
-
-    // Formatting
-    const toggleFormat = (command: string) => {
-        document.execCommand(command, false);
-        editorRef.current?.focus();
-    };
-
-    // Save changes to DB (Debounced)
+    // Auto-save debounced
     useEffect(() => {
         const timer = setTimeout(async () => {
-            if (content !== initialNote.content || title !== initialNote.title || noteColor !== initialNote.color) {
-                const { error } = await supabase
-                    .from("notes")
-                    .update({
-                        title,
-                        content,
-                        // @ts-ignore
-                        color: noteColor,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq("id", initialNote.id);
+            if (content !== initialNote.content || title !== initialNote.title) {
+                await supabase.from("notes").update({ title, content, updated_at: new Date().toISOString() }).eq("id", initialNote.id);
             }
         }, 2000);
         return () => clearTimeout(timer);
-    }, [content, title, noteColor, initialNote.id, supabase]);
+    }, [content, title, initialNote.id]);
+
+    const toggleFormat = (command: string) => {
+        document.execCommand(command, false);
+        editorRef.current?.focus();
+        const newContent = editorRef.current?.innerHTML || content;
+        setContent(newContent);
+        pushHistory(newContent);
+        channelRef.current?.send({ type: 'broadcast', event: 'text_update', payload: { content: newContent, title, color: noteColor, textColor } });
+    };
 
     if (isNameDialogOpen) {
         return (
             <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-card border p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                    <h2 className="text-xl font-bold mb-4">Join Session</h2>
-                    <p className="text-muted-foreground mb-4">Please enter your name to join the collaboration.</p>
+                <div className="bg-card border p-6 rounded-xl shadow-2xl max-w-md w-full mx-4">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-xl">✏️</span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold">Join Session</h2>
+                            <p className="text-sm text-muted-foreground">Enter your name to start collaborating</p>
+                        </div>
+                    </div>
                     <form onSubmit={(e) => {
                         e.preventDefault();
-                        const formData = new FormData(e.currentTarget);
-                        const name = formData.get('name') as string;
-                        if (name.trim()) {
-                            setMyName(name.trim());
-                            setIsNameDialogOpen(false);
-                        }
-                    }}>
-                        <input
-                            name="name"
-                            className="w-full p-2 border rounded mb-4 bg-background"
-                            placeholder="Your Name"
-                            autoFocus
-                        />
-                        <Button type="submit" className="w-full">Join</Button>
+                        const name = (new FormData(e.currentTarget).get('name') as string)?.trim();
+                        if (name) { setMyName(name); setIsNameDialogOpen(false); }
+                    }} className="mt-4">
+                        <input name="name" className="w-full p-3 border rounded-lg mb-4 bg-background focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Your name" autoFocus />
+                        <Button type="submit" className="w-full">Join Collaboration</Button>
                     </form>
                 </div>
             </div>
         );
     }
 
-    const colors = [
-        "#ffffff", // White
-        "#f28b82", // Red
-        "#fbbc04", // Orange
-        "#fff475", // Yellow
-        "#ccff90", // Green
-        "#a7ffeb", // Teal
-        "#cbf0f8", // Blue
-        "#aecbfa", // Dark Blue
-        "#d7aefb", // Purple
-        "#fdcfe8", // Pink
-        "#e6c9a8", // Brown
-        "#e8eaed", // Grey
-    ];
+    const colors = ["#ffffff","#f28b82","#fbbc04","#fff475","#ccff90","#a7ffeb","#cbf0f8","#aecbfa","#d7aefb","#fdcfe8","#e6c9a8","#e8eaed"];
 
     return (
         <div className="h-full w-full overflow-hidden relative flex flex-col" style={{ backgroundColor: noteColor, color: textColor }}>
-            <style jsx global>{`
-@media print {
-    @page { margin: 2cm; }
-    body * { visibility: hidden; }
-        .print - content, .print - content * { visibility: visible; }
-            .print - content { position: absolute; left: 0; top: 0; width: 100 %; }
-}
-`}</style>
-
-            {/* Formatting Toolbar */}
-            <div className="h-12 border-b bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 shrink-0 z-10 print:hidden">
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={() => toggleFormat("bold")} title="Bold">
+            {/* Toolbar */}
+            <div className="h-12 border-b bg-card/80 backdrop-blur-sm flex items-center justify-between px-4 shrink-0 z-10">
+                <div className="flex items-center gap-1">
+                    {/* Undo/Redo */}
+                    <Button variant="ghost" size="sm" onClick={handleUndo} title="Undo (Ctrl+Z)" disabled={historyIndex.current <= 0}>
+                        <Undo className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleRedo} title="Redo (Ctrl+Shift+Z)" disabled={historyIndex.current >= history.current.length - 1}>
+                        <Redo className="h-4 w-4" />
+                    </Button>
+                    <div className="w-px h-4 bg-border mx-1" />
+                    {/* Formatting */}
+                    <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={() => toggleFormat("bold")} title="Bold">
                         <Bold className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={() => toggleFormat("italic")} title="Italic">
+                    <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={() => toggleFormat("italic")} title="Italic">
                         <Italic className="h-4 w-4" />
                     </Button>
-                    <div className="w-px h-4 bg-border mx-2" />
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={() => toggleFormat("insertUnorderedList")} title="List">
+                    <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={() => toggleFormat("insertUnorderedList")} title="List">
                         <List className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={() => toggleFormat("insertHorizontalRule")} title="Divider">
+                    <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={() => toggleFormat("insertHorizontalRule")} title="Divider">
                         <Minus className="h-4 w-4" />
                     </Button>
-                    <div className="w-px h-4 bg-border mx-2" />
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={insertCard} title="Insert Card">
+                    <div className="w-px h-4 bg-border mx-1" />
+                    <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={insertCard} title="Sticky Note">
                         <StickyNote className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={insertCard} title="Insert Card">
-                        <StickyNote className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onMouseDown={(e) => e.preventDefault()} onClick={insertWhiteboard} title="Insert Whiteboard">
+                    <Button variant="ghost" size="sm" onMouseDown={e => e.preventDefault()} onClick={insertWhiteboard} title="Whiteboard">
                         <ImageIcon className="h-4 w-4" />
                     </Button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {/* Color Picker */}
-                    <div className="flex items-center gap-1 mr-2">
+                    {/* Background colors */}
+                    <div className="flex items-center gap-0.5">
                         {colors.map(c => (
-                            <button
-                                key={c}
-                                className={`w-4 h-4 rounded-full border border-gray-300 shadow-sm hover:scale-110 transition-transform ${noteColor === c ? 'ring-2 ring-primary' : ''}`}
+                            <button key={c}
+                                className={`w-4 h-4 rounded-full border border-gray-300 hover:scale-125 transition-transform ${noteColor === c ? 'ring-2 ring-primary ring-offset-1' : ''}`}
                                 style={{ backgroundColor: c }}
                                 onClick={() => handleColorChange(c)}
-                                title={c}
                             />
                         ))}
                     </div>
-
-                    <div className="w-px h-4 bg-border mx-2" />
-
-                    {/* Text Color Picker */}
-                    <div className="flex items-center gap-1 mr-2">
-                        <Type className="h-4 w-4 text-muted-foreground mr-1" />
-                        <input
-                            type="color"
-                            value={textColor}
-                            onChange={(e) => handleTextColorChange(e.target.value)}
-                            className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
-                            title="Text Color"
-                        />
+                    <div className="w-px h-4 bg-border mx-1" />
+                    {/* Text color */}
+                    <div className="flex items-center gap-1">
+                        <Type className="h-3.5 w-3.5 text-muted-foreground" />
+                        <input type="color" value={textColor} onChange={e => handleTextColorChange(e.target.value)} className="w-6 h-6 p-0 border-0 rounded cursor-pointer" title="Text Color" />
                     </div>
-
+                    <div className="w-px h-4 bg-border mx-1" />
+                    {/* Online users */}
+                    <div className="flex items-center gap-1">
+                        {isConnected
+                            ? <Wifi className="h-3.5 w-3.5 text-green-500" />
+                            : <WifiOff className="h-3.5 w-3.5 text-red-500" />}
+                        <div className="flex -space-x-1">
+                            {/* Self */}
+                            <div className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white shadow-sm" style={{ backgroundColor: myColor }} title={`${myName} (you)`}>
+                                {myName[0]?.toUpperCase()}
+                            </div>
+                            {/* Others */}
+                            {Object.entries(cursors).filter(([k]) => k !== myName).map(([key, c]) => (
+                                <div key={key} className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white shadow-sm" style={{ backgroundColor: c.color }} title={c.name}>
+                                    {c.name[0]?.toUpperCase()}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="w-px h-4 bg-border mx-1" />
                     <Button variant="ghost" size="sm" onClick={handleSave} title="Save">
                         <Save className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={handleDownloadPDF} title="Download PDF">
+                    <Button variant="ghost" size="sm" onClick={() => window.print()} title="Print / PDF">
                         <Download className="h-4 w-4" />
                     </Button>
                 </div>
             </div>
 
+            {/* Connection banner */}
+            {!isConnected && (
+                <div className="bg-yellow-50 border-b border-yellow-200 text-yellow-800 text-xs px-4 py-1.5 flex items-center gap-2 shrink-0">
+                    <WifiOff className="h-3 w-3" />
+                    Reconnecting... Changes will sync when connection is restored.
+                </div>
+            )}
+
             {/* Editor Container */}
             <div
                 ref={containerRef}
-                className="flex-1 overflow-y-auto relative cursor-text print-content"
-                onClick={handleContainerClick}
+                className="flex-1 overflow-y-auto relative cursor-text"
+                onClick={(e) => {
+                    if (e.target === containerRef.current || e.target === editorRef.current) editorRef.current?.focus();
+                }}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
             >
-                {/* Whiteboards Layer */}
+                {/* Whiteboards */}
                 {whiteboards.map(wb => (
                     <CollaborativeWhiteboard
                         key={wb.id}
@@ -758,165 +564,114 @@ function SimpleCollaborativeEditor({ initialNote }: { initialNote: Note }) {
                         initialWidth={wb.width}
                         initialHeight={wb.height}
                         onMove={(x: number, y: number) => updateWhiteboardPosition(wb.id, x, y)}
-                        channel={channelRef[0]}
+                        channel={channelRef.current}
                         onClose={() => {
                             const newBoards = whiteboards.filter(w => w.id !== wb.id);
                             setWhiteboards(newBoards);
-                            if (channelRef[0]) {
-                                channelRef[0].send({
-                                    type: 'broadcast',
-                                    event: 'whiteboard_update',
-                                    payload: { whiteboards: newBoards }
-                                });
-                            }
+                            channelRef.current?.send({ type: 'broadcast', event: 'whiteboard_update', payload: { whiteboards: newBoards } });
                         }}
                     />
                 ))}
 
-                {/* Cards Layer */}
+                {/* Sticky Cards */}
                 {cards.map(card => (
                     <div
                         key={card.id}
-                        className="absolute w-48 h-48 shadow-lg rounded-md p-4 flex flex-col z-20 cursor-move transition-shadow hover:shadow-xl"
-                        style={{
-                            left: card.x,
-                            top: card.y,
-                            backgroundColor: card.color
-                        }}
-                        onMouseDown={(e) => handleCardMouseDown(e, card.id)}
+                        className="absolute w-52 shadow-xl rounded-lg flex flex-col z-20 cursor-move select-none"
+                        style={{ left: card.x, top: card.y, backgroundColor: card.color }}
+                        onMouseDown={e => handleCardMouseDown(e, card.id)}
                     >
-                        <div className="flex justify-between items-center mb-2 opacity-50 hover:opacity-100">
-                            <span className="text-xs font-bold uppercase tracking-wider text-black/50">Note</span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const newCards = cards.filter(c => c.id !== card.id);
-                                    setCards(newCards);
-                                    if (channelRef[0]) {
-                                        channelRef[0].send({
-                                            type: 'broadcast',
-                                            event: 'card_update',
-                                            payload: { cards: newCards }
-                                        });
-                                    }
-                                }}
-                                className="hover:bg-black/10 rounded p-0.5"
-                            >
-                                <X className="h-3 w-3 text-black/50" />
+                        {/* Card header */}
+                        <div className="flex justify-between items-center px-3 pt-2 pb-1">
+                            <div className="flex gap-1">
+                                {["#fef3c7","#bbf7d0","#bfdbfe","#fecaca","#e9d5ff"].map(c => (
+                                    <button key={c} className={`w-3 h-3 rounded-full border border-black/10 hover:scale-125 transition-transform ${card.color === c ? 'ring-1 ring-black/30' : ''}`}
+                                        style={{ backgroundColor: c }}
+                                        onClick={e => { e.stopPropagation(); const nc = cards.map(cc => cc.id === card.id ? { ...cc, color: c } : cc); setCards(nc); broadcastCardContent(nc); }}
+                                        onMouseDown={e => e.stopPropagation()}
+                                    />
+                                ))}
+                            </div>
+                            <button className="hover:bg-black/10 rounded p-0.5 transition-colors" onClick={e => { e.stopPropagation(); const nc = cards.filter(c => c.id !== card.id); setCards(nc); channelRef.current?.send({ type: 'broadcast', event: 'card_update', payload: { cards: nc } }); }}>
+                                <X className="h-3 w-3 text-black/40" />
                             </button>
                         </div>
                         <textarea
                             value={card.content}
-                            onChange={(e) => handleCardContentChange(card.id, e.target.value)}
-                            className="flex-1 bg-transparent resize-none border-none focus:outline-none text-sm leading-relaxed text-black font-medium"
+                            onChange={e => handleCardContentChange(card.id, e.target.value)}
+                            className="flex-1 bg-transparent resize-none border-none focus:outline-none text-sm leading-relaxed text-black/80 px-3 pb-3 min-h-[100px]"
                             placeholder="Type here..."
-                            onMouseDown={(e) => e.stopPropagation()} // Allow text selection without dragging
+                            onMouseDown={e => e.stopPropagation()}
                         />
                     </div>
                 ))}
 
-                {/* Remote Selections Layer - z-index 10 */}
-                {Object.entries(cursors).map(([key, cursor]) => (
-                    key !== myName && cursor.selectionRects && cursor.selectionRects.map((rect, i) => (
-                        <div
-                            key={`${key}-sel-${i}`}
-                            className="absolute pointer-events-none z-10 opacity-30"
-                            style={{
-                                left: rect.x,
-                                top: rect.y,
-                                width: rect.width,
-                                height: rect.height,
-                                backgroundColor: cursor.color
-                            }}
+                {/* Remote Selections */}
+                {Object.entries(cursors).map(([key, cursor]) =>
+                    key !== myName && cursor.selectionRects?.map((rect, i) => (
+                        <div key={`${key}-sel-${i}`} className="absolute pointer-events-none z-10 opacity-25 rounded-sm"
+                            style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height, backgroundColor: cursor.color }}
                         />
                     ))
-                ))}
+                )}
 
-                {/* Cursors Layer - z-index 50 */}
-                {Object.entries(cursors).map(([key, cursor]) => (
+                {/* Remote Cursors — smooth with CSS transition */}
+                {Object.entries(cursors).map(([key, cursor]) =>
                     key !== myName && (
                         <div
                             key={key}
-                            className="absolute pointer-events-none z-50 transition-all duration-100 ease-linear flex flex-col items-start print:hidden"
+                            className="absolute pointer-events-none z-50 flex flex-col items-start print:hidden"
                             style={{
                                 left: cursor.x,
                                 top: cursor.y,
+                                transition: 'left 80ms linear, top 80ms linear',
+                                willChange: 'left, top',
                             }}
                         >
                             {cursor.isTyping ? (
-                                // Typing Mode: Blinking Caret + Arrow
                                 <div className="relative">
-                                    {/* Caret */}
-                                    <div
-                                        className="w-0.5 h-6 animate-pulse shadow-[0_0_8px_rgba(0,0,0,0.2)]"
-                                        style={{ backgroundColor: cursor.color }}
-                                    />
-                                    {/* Writing Indicator */}
-                                    <div
-                                        className="absolute -top-8 left-0 px-2 py-1 text-[10px] font-bold text-white rounded-md shadow-md whitespace-nowrap flex items-center gap-1 z-50"
-                                        style={{ backgroundColor: cursor.color }}
-                                    >
-                                        {cursor.name}
-                                        <span className="opacity-75 font-normal">is writing...</span>
-                                    </div>
-                                    {/* Arrow Icon (Visible while typing too) */}
-                                    <div className="absolute top-4 -left-2 opacity-80">
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill={cursor.color}
-                                            className="drop-shadow-sm"
-                                        >
-                                            <path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                                        </svg>
+                                    <div className="w-0.5 h-5 animate-pulse" style={{ backgroundColor: cursor.color }} />
+                                    <div className="absolute -top-7 left-0 px-2 py-0.5 text-[10px] font-semibold text-white rounded-md shadow-lg whitespace-nowrap" style={{ backgroundColor: cursor.color }}>
+                                        {cursor.name} <span className="opacity-75 font-normal">typing…</span>
                                     </div>
                                 </div>
                             ) : (
-                                // Mouse Mode: Arrow Cursor
                                 <div className="relative">
-                                    <svg
-                                        width="24"
-                                        height="24"
-                                        viewBox="0 0 24 24"
-                                        fill={cursor.color}
-                                        className="drop-shadow-md"
-                                    >
-                                        <path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill={cursor.color} className="drop-shadow-md">
+                                        <path d="M3 3L10.07 19.97L12.58 12.58L19.97 10.07L3 3Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
                                     </svg>
-                                    <span
-                                        className="absolute top-4 left-4 px-2 py-0.5 text-[10px] font-bold text-white rounded-full shadow-sm whitespace-nowrap"
-                                        style={{ backgroundColor: cursor.color }}
-                                    >
+                                    <span className="absolute top-3.5 left-3 px-1.5 py-0.5 text-[10px] font-semibold text-white rounded-full shadow-sm whitespace-nowrap" style={{ backgroundColor: cursor.color }}>
                                         {cursor.name}
                                     </span>
                                 </div>
                             )}
                         </div>
                     )
-                ))}
+                )}
 
-                <div className="max-w-3xl mx-auto px-8 py-12 min-h-full shadow-sm border-x border-dashed border-muted/30" style={{ backgroundColor: noteColor }}>
+                {/* Note content */}
+                <div className="max-w-3xl mx-auto px-8 py-12 min-h-full" style={{ backgroundColor: noteColor }}>
                     <input
                         value={title}
-                        onChange={(e) => handleTitleChange(e.target.value)}
+                        onChange={e => handleTitleChange(e.target.value)}
                         className="w-full text-4xl font-bold bg-transparent border-none focus:outline-none mb-6 placeholder:text-muted-foreground/40"
                         placeholder="Untitled Session"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
+                        style={{ color: textColor }}
                     />
                     <div
                         ref={editorRef}
                         contentEditable
                         onInput={handleInput}
                         onSelect={() => updateCaretPosition(true)}
-                        className="w-full min-h-[calc(100vh-300px)] outline-none text-lg leading-relaxed placeholder:text-muted-foreground/40 font-mono empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40"
-                        data-placeholder="Start typing..."
+                        className="w-full min-h-[calc(100vh-300px)] outline-none text-lg leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/40"
+                        data-placeholder="Start typing… your collaborators will see it live."
                         spellCheck={false}
                         suppressContentEditableWarning
+                        style={{ color: textColor }}
                     />
                 </div>
             </div>
-            {/* <WhiteboardModal isOpen={isWhiteboardOpen} onClose={() => setIsWhiteboardOpen(false)} onSave={insertWhiteboard} /> */}
         </div>
     );
 }
@@ -928,259 +683,173 @@ function CollaborativeWhiteboard({ id, initialX, initialY, initialWidth, initial
     const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
     const [color, setColor] = useState("#000000");
     const [brushSize, setBrushSize] = useState(3);
-    const [tool, setTool] = useState<'pen' | 'line'>('pen');
-    const [startPoint, setStartPoint] = useState<{ x: number, y: number } | null>(null);
+    const [tool, setTool] = useState<'pen' | 'line' | 'rect' | 'circle'>('pen');
+    const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
     const [snapshot, setSnapshot] = useState<ImageData | null>(null);
     const [showGrid, setShowGrid] = useState(true);
-
-    // Dragging logic
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const lastDrawBroadcast = useRef(0);
 
     useEffect(() => {
-        if (canvasRef.current) {
-            const canvas = canvasRef.current;
-            canvas.width = initialWidth;
-            canvas.height = initialHeight;
-            const context = canvas.getContext('2d');
-            if (context) {
-                context.lineCap = 'round';
-                context.lineJoin = 'round';
-                context.strokeStyle = color;
-                context.lineWidth = brushSize;
-                setCtx(context);
-            }
+        if (!canvasRef.current) return;
+        const canvas = canvasRef.current;
+        canvas.width = initialWidth;
+        canvas.height = initialHeight;
+        const context = canvas.getContext('2d');
+        if (context) {
+            context.lineCap = 'round';
+            context.lineJoin = 'round';
+            setCtx(context);
         }
     }, []);
 
-    // Listen for remote draw events
     useEffect(() => {
         const handleRemoteDraw = (e: CustomEvent) => {
-            const { type, x, y, color: remoteColor, size, tool: remoteTool, startX, startY } = e.detail;
+            const { type, x, y, color: rc, size, tool: rt, startX, startY } = e.detail;
             if (!ctx) return;
-
             ctx.save();
-            ctx.strokeStyle = remoteColor;
+            ctx.strokeStyle = rc;
             ctx.lineWidth = size;
-
-            if (type === 'start') {
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-            } else if (type === 'move') {
-                if (remoteTool === 'pen') {
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                }
-            } else if (type === 'line') {
-                ctx.beginPath();
-                ctx.moveTo(startX, startY);
-                ctx.lineTo(x, y);
-                ctx.stroke();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            if (type === 'start') { ctx.beginPath(); ctx.moveTo(x, y); }
+            else if (type === 'move' && rt === 'pen') { ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); }
+            else if (type === 'line') { ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(x, y); ctx.stroke(); }
+            else if (type === 'rect') { ctx.strokeRect(startX, startY, x - startX, y - startY); }
+            else if (type === 'circle') {
+                const rx = Math.abs(x - startX) / 2, ry = Math.abs(y - startY) / 2;
+                ctx.beginPath(); ctx.ellipse(startX + (x - startX) / 2, startY + (y - startY) / 2, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
             }
-
             ctx.restore();
         };
-
         window.addEventListener(`draw-${id}`, handleRemoteDraw as EventListener);
         return () => window.removeEventListener(`draw-${id}`, handleRemoteDraw as EventListener);
     }, [ctx, id]);
 
+    useEffect(() => {
+        if (ctx) { ctx.strokeStyle = color; ctx.lineWidth = brushSize; }
+    }, [color, brushSize, ctx]);
+
     const getCoords = (e: React.MouseEvent | React.TouchEvent) => {
         if (!canvasRef.current) return { x: 0, y: 0 };
         const rect = canvasRef.current.getBoundingClientRect();
-        let clientX, clientY;
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    };
 
-        if ('touches' in e) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = (e as React.MouseEvent).clientX;
-            clientY = (e as React.MouseEvent).clientY;
+    const broadcastDraw = (type: string, x: number, y: number, startX?: number, startY?: number) => {
+        // Throttle draw broadcasts to 30fps for pen tool
+        if (type === 'move') {
+            const now = Date.now();
+            if (now - lastDrawBroadcast.current < 33) return;
+            lastDrawBroadcast.current = now;
         }
-
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
+        channel?.send({ type: 'broadcast', event: 'draw_event', payload: { whiteboardId: id, type, x, y, color, size: brushSize, tool, startX, startY } });
     };
 
     const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
         if (isDragging) return;
-        e.stopPropagation(); // Prevent dragging the board
+        e.stopPropagation();
         setIsDrawing(true);
         const { x, y } = getCoords(e);
-
-        if (tool === 'line') {
-            setStartPoint({ x, y });
-            if (ctx && canvasRef.current) {
-                setSnapshot(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
-            }
-        } else {
-            if (ctx) {
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-            }
+        if (tool === 'pen') {
+            ctx?.beginPath(); ctx?.moveTo(x, y); ctx?.lineTo(x, y); ctx?.stroke();
             broadcastDraw('start', x, y);
+        } else {
+            setStartPoint({ x, y });
+            if (ctx && canvasRef.current) setSnapshot(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
         }
     };
 
     const draw = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!isDrawing || !ctx || !canvasRef.current) return;
-        e.stopPropagation();
-        e.preventDefault();
-
+        if (!isDrawing || !ctx || !canvasRef.current || !snapshot) return;
+        e.stopPropagation(); e.preventDefault();
         const { x, y } = getCoords(e);
-
-        if (tool === 'line') {
-            if (snapshot) {
-                ctx.putImageData(snapshot, 0, 0);
-            }
-            if (startPoint) {
-                ctx.beginPath();
-                ctx.moveTo(startPoint.x, startPoint.y);
-                ctx.lineTo(x, y);
-                ctx.stroke();
-            }
-        } else {
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+        if (tool === 'pen') {
+            ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y);
             broadcastDraw('move', x, y);
+        } else if (startPoint) {
+            ctx.putImageData(snapshot, 0, 0);
+            if (tool === 'line') { ctx.beginPath(); ctx.moveTo(startPoint.x, startPoint.y); ctx.lineTo(x, y); ctx.stroke(); }
+            else if (tool === 'rect') { ctx.strokeRect(startPoint.x, startPoint.y, x - startPoint.x, y - startPoint.y); }
+            else if (tool === 'circle') {
+                const rx = Math.abs(x - startPoint.x) / 2, ry = Math.abs(y - startPoint.y) / 2;
+                ctx.beginPath(); ctx.ellipse(startPoint.x + (x - startPoint.x) / 2, startPoint.y + (y - startPoint.y) / 2, rx, ry, 0, 0, 2 * Math.PI); ctx.stroke();
+            }
         }
     };
 
     const stopDrawing = (e: React.MouseEvent | React.TouchEvent) => {
         if (!isDrawing) return;
         setIsDrawing(false);
-
-        if (tool === 'line' && startPoint) {
+        if (startPoint && tool !== 'pen') {
             const { x, y } = getCoords(e);
-            broadcastDraw('line', x, y, startPoint.x, startPoint.y);
+            broadcastDraw(tool, x, y, startPoint.x, startPoint.y);
         }
-
-        if (ctx) ctx.beginPath();
+        ctx?.beginPath();
+        setSnapshot(null);
     };
 
-    const broadcastDraw = (type: string, x: number, y: number, startX?: number, startY?: number) => {
-        if (channel) {
-            channel.send({
-                type: 'broadcast',
-                event: 'draw_event',
-                payload: { whiteboardId: id, type, x, y, color, size: brushSize, tool, startX, startY }
-            });
-        }
-    };
-
-    // Dragging Logic
-    const handleMouseDown = (e: React.MouseEvent) => {
-        // Only drag if clicking header
-        if ((e.target as HTMLElement).closest('.wb-header')) {
-            setIsDragging(true);
-            const rect = containerRef.current!.getBoundingClientRect();
-            // Need to account for parent scroll/offset if absolute
-            // But here we are using left/top style, so we need offset relative to that
-            setDragOffset({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
-            });
-        }
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (isDragging && containerRef.current) {
-            // Calculate new position relative to parent container
-            // The parent is the editor container.
-            // We need to find the parent's rect to calculate relative position
+    // Dragging
+    useEffect(() => {
+        const handleDragMove = (e: MouseEvent) => {
+            if (!isDragging || !containerRef.current) return;
             const parent = containerRef.current.offsetParent as HTMLElement;
             if (parent) {
-                const parentRect = parent.getBoundingClientRect();
-                const x = e.clientX - parentRect.left - dragOffset.x + parent.scrollTop;
-                const y = e.clientY - parentRect.top - dragOffset.y; // + scrollTop if parent scrolls?
-                // Actually, our parent is the relative container.
-                // Let's rely on onMove prop
-                onMove(x, y);
+                const pr = parent.getBoundingClientRect();
+                onMove(e.clientX - pr.left - dragOffset.x, e.clientY - pr.top - dragOffset.y);
             }
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(false);
-    };
-
-    useEffect(() => {
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove as any);
-            window.addEventListener('mouseup', handleMouseUp);
-        } else {
-            window.removeEventListener('mousemove', handleMouseMove as any);
-            window.removeEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove as any);
-            window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDragging]);
+        const onUp = () => setIsDragging(false);
+        if (isDragging) { window.addEventListener('mousemove', handleDragMove); window.addEventListener('mouseup', onUp); }
+        return () => { window.removeEventListener('mousemove', handleDragMove); window.removeEventListener('mouseup', onUp); };
+    }, [isDragging, dragOffset]);
 
-    useEffect(() => {
-        if (ctx) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = brushSize;
-        }
-    }, [color, brushSize, ctx]);
+    const toolBtn = (t: typeof tool, icon: React.ReactNode, label: string) => (
+        <button onClick={() => setTool(t)} className={`p-1 rounded transition-colors ${tool === t ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title={label}>
+            {icon}
+        </button>
+    );
 
     return (
-        <div
-            ref={containerRef}
-            className="absolute bg-white shadow-2xl border rounded-lg flex flex-col z-30"
-            style={{ left: initialX, top: initialY, width: initialWidth, height: initialHeight + 40 }}
-            onMouseDown={handleMouseDown}
+        <div ref={containerRef} className="absolute bg-white shadow-2xl border rounded-xl flex flex-col z-30 overflow-hidden"
+            style={{ left: initialX, top: initialY, width: initialWidth, height: initialHeight + 44 }}
+            onMouseDown={e => { if ((e.target as HTMLElement).closest('.wb-header')) { setIsDragging(true); const r = containerRef.current!.getBoundingClientRect(); setDragOffset({ x: e.clientX - r.left, y: e.clientY - r.top }); } }}
         >
-            {/* Header / Toolbar */}
-            <div className="wb-header h-10 bg-gray-100 border-b flex items-center justify-between px-2 cursor-move select-none rounded-t-lg">
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-500">WHITEBOARD</span>
-                    <div className="h-4 w-px bg-gray-300 mx-1" />
-                    <input type="color" value={color} onChange={e => setColor(e.target.value)} className="w-5 h-5 p-0 border-0 rounded cursor-pointer" />
-                    <input type="range" min="1" max="20" value={brushSize} onChange={e => setBrushSize(parseInt(e.target.value))} className="w-16 h-1" />
-                    <div className="h-4 w-px bg-gray-300 mx-1" />
-                    <button onClick={() => setTool('pen')} className={`p-1 rounded ${tool === 'pen' ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title="Pen">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </button>
-                    <button onClick={() => setTool('line')} className={`p-1 rounded ${tool === 'line' ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title="Line">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                    </button>
-                    <button onClick={() => setShowGrid(!showGrid)} className={`p-1 rounded ${showGrid ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title="Grid">
+            {/* Header */}
+            <div className="wb-header h-11 bg-gray-50 border-b flex items-center justify-between px-2 cursor-move select-none rounded-t-xl">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">Board</span>
+                    <input type="color" value={color} onChange={e => setColor(e.target.value)} className="w-5 h-5 p-0 border-0 rounded cursor-pointer" title="Color" />
+                    <input type="range" min="1" max="20" value={brushSize} onChange={e => setBrushSize(+e.target.value)} className="w-14 h-1 accent-gray-600" />
+                    <div className="w-px h-4 bg-gray-200 mx-0.5" />
+                    {toolBtn('pen', <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>, 'Pen')}
+                    {toolBtn('line', <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>, 'Line')}
+                    {toolBtn('rect', <Square className="w-3 h-3" />, 'Rectangle')}
+                    {toolBtn('circle', <Circle className="w-3 h-3" />, 'Circle')}
+                    <div className="w-px h-4 bg-gray-200 mx-0.5" />
+                    <button onClick={() => setShowGrid(!showGrid)} className={`p-1 rounded transition-colors ${showGrid ? 'bg-gray-300' : 'hover:bg-gray-200'}`} title="Toggle Grid">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
                     </button>
+                    <button onClick={() => { if (ctx && canvasRef.current) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); }} className="p-1 rounded hover:bg-red-100 transition-colors" title="Clear">
+                        <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
                 </div>
-                <button onClick={onClose} className="hover:bg-red-100 p-1 rounded text-red-500"><X className="h-4 w-4" /></button>
+                <button onClick={onClose} className="hover:bg-red-100 p-1 rounded transition-colors text-red-400"><X className="h-4 w-4" /></button>
             </div>
 
-            {/* Canvas Area */}
-            <div className="flex-1 relative overflow-hidden bg-white rounded-b-lg">
+            {/* Canvas */}
+            <div className="flex-1 relative overflow-hidden bg-white">
                 {showGrid && (
-                    <div className="absolute inset-0 pointer-events-none opacity-10"
-                        style={{
-                            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
-                            backgroundSize: '20px 20px'
-                        }}
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.07]"
+                        style={{ backgroundImage: 'linear-gradient(#000 1px,transparent 1px),linear-gradient(90deg,#000 1px,transparent 1px)', backgroundSize: '20px 20px' }}
                     />
                 )}
-                <canvas
-                    ref={canvasRef}
-                    className="absolute inset-0 cursor-crosshair touch-none"
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
+                <canvas ref={canvasRef} className="absolute inset-0 cursor-crosshair touch-none"
+                    onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
                 />
             </div>
         </div>

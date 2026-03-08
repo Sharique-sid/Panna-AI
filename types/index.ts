@@ -25,7 +25,7 @@ export interface User {
   aud: string
   user_metadata: any
   id: string
-  email: string
+  email?: string
   created_at: string
 }
 
