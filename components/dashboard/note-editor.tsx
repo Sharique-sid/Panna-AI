@@ -141,16 +141,7 @@ export function NoteEditor({
     return () => clearTimeout(timer);
   }, [hasUnsavedChanges, handleSave, isOnline]);
 
-  // Auto-generate tags when content changes (debounced)
-  useEffect(() => {
-    if (!content || content.length < 50) return; // Don't generate for short content
-
-    const timer = setTimeout(() => {
-      handleGenerateTags();
-    }, 3000); // Wait 3 seconds after typing stops
-
-    return () => clearTimeout(timer);
-  }, [content]);
+  // Auto-generate tags disabled to preserve AI API rate limits (tags generated via AI Menu on demand)
 
   const handleTitleChange = (value: string) => {
     // Limit length
@@ -186,31 +177,28 @@ export function NoteEditor({
     }, 0);
   };
 
-  const createNewNote = () => {
+  const createNewNote = async () => {
     console.log('=== createNewNote function called ===');
-    // Create a new note by clearing the current note data
-    setTitle("");
-    setContent("");
-    setCategoryId("");
-    setTags([]);
-    setHasUnsavedChanges(false);
-    setLastSaved(null);
-    setPublicShareId(null);
-    setIsPublic(false);
-    console.log('=== New note created successfully ===');
+    try {
+      await createNote();
+      console.log('=== New note created successfully ===');
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast.error('Failed to create new note');
+    }
   };
 
   const saveNote = async () => {
-    if (!title.trim()) {
-      console.log('Cannot save note without a title');
+    if (!title.trim() && !content.trim()) {
+      console.log('Cannot save empty note');
       return;
     }
 
     try {
       const noteData = {
-        title: title.trim(),
+        title: title.trim() || 'Untitled',
         content,
-        categoryId: categoryId || null,
+        categoryId: categoryId || undefined,
         tags,
         isPublic,
       };
@@ -220,14 +208,15 @@ export function NoteEditor({
         await updateNote(note.id, noteData);
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
-        console.log('Note saved successfully');
+        toast.success('Note saved successfully');
       } else {
-        // For new notes, just trigger the auto-save mechanism
-        // The auto-save will handle creating the note
-        console.log('Note will be auto-saved');
+        // For new notes, create in store
+        await createNote();
+        toast.success('Note created');
       }
     } catch (error) {
       console.error('Error saving note:', error);
+      toast.error('Failed to save note');
     }
   };
 

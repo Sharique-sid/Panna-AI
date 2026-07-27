@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { Note, Category } from "@/types";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface NotesStore {
   notes: Note[];
@@ -245,10 +246,16 @@ export const useNotesStore = create<NotesStore>()(
 
         createNote: async () => {
           try {
-            const {
-              data: { user },
-            } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
+            let { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              const { data: sessionData } = await supabase.auth.getSession();
+              user = sessionData?.session?.user || null;
+            }
+
+            if (!user) {
+              toast.error("Please sign in to create notes");
+              throw new Error("User not authenticated");
+            }
 
             const { data, error } = await supabase
               .from("notes")
@@ -281,9 +288,13 @@ export const useNotesStore = create<NotesStore>()(
               notes: [newNote, ...state.notes],
               selectedNote: newNote,
             }));
+            toast.success("New note created");
           } catch (error: any) {
             console.log("Error creating note:", error);
             set({ error: error.message });
+            if (error.message !== "User not authenticated") {
+              toast.error(error.message || "Failed to create note");
+            }
           }
         },
 
@@ -481,10 +492,16 @@ export const useNotesStore = create<NotesStore>()(
 
         createCategory: async (name) => {
           try {
-            const {
-              data: { user },
-            } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
+            let { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              const { data: sessionData } = await supabase.auth.getSession();
+              user = sessionData?.session?.user || null;
+            }
+
+            if (!user) {
+              toast.error("Please sign in to create categories");
+              throw new Error("User not authenticated");
+            }
 
             const { data, error } = await supabase
               .from("categories")
@@ -509,8 +526,12 @@ export const useNotesStore = create<NotesStore>()(
                 a.name.localeCompare(b.name)
               ),
             }));
+            toast.success(`Category "${name}" created`);
           } catch (error: any) {
             set({ error: error.message });
+            if (error.message !== "User not authenticated") {
+              toast.error(error.message || "Failed to create category");
+            }
           }
         },
 

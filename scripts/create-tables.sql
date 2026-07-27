@@ -157,13 +157,12 @@ CREATE POLICY "Users can insert their own AI interactions" ON ai_interactions
 -- Create RLS policies for note collaborators
 CREATE POLICY "Users can view collaborators for their notes" ON note_collaborators
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM notes WHERE notes.id = note_collaborators.note_id AND notes.user_id = auth.uid()) OR
-    auth.uid() = user_id
+    auth.uid() = user_id OR auth.uid() = invited_by
   );
 
 CREATE POLICY "Note owners can manage collaborators" ON note_collaborators
   FOR ALL USING (
-    EXISTS (SELECT 1 FROM notes WHERE notes.id = note_collaborators.note_id AND notes.user_id = auth.uid())
+    auth.uid() = user_id OR auth.uid() = invited_by
   );
 
 -- Create function to update updated_at timestamp

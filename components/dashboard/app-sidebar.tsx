@@ -216,20 +216,24 @@ export function AppSidebar({
               <SidebarMenu>
                 {isCreatingCategory && (
                   <SidebarMenuItem>
-                    <div className="px-2 py-1">
+                    <div className="flex items-center gap-1 px-2 py-1">
                       <Input
                         placeholder="Category name..."
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        onBlur={() => {
-                          if (!newCategoryName.trim()) {
-                            setIsCreatingCategory(false);
-                          }
-                        }}
-                        className="h-7 text-xs"
+                        className="h-7 text-xs flex-1"
                         autoFocus
                       />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCreateCategory}
+                        disabled={!newCategoryName.trim()}
+                        className="h-7 px-2 text-xs"
+                      >
+                        Add
+                      </Button>
                     </div>
                   </SidebarMenuItem>
                 )}

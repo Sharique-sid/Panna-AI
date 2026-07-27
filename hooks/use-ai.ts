@@ -28,7 +28,7 @@ export function useAI() {
       return result.result;
     } catch (error: any) {
       toast.dismiss(toastId);
-      toast("Failed to process AI request");
+      toast.error(error?.message || "Failed to process AI request");
       return null;
     } finally {
       setIsLoading(false);

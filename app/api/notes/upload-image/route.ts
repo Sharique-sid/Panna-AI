@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      return NextResponse.json({ error: "Failed to create upload URL" }, { status: 500 });
+      return NextResponse.json({ error: uploadError.message || "Failed to create upload URL. Ensure 'note-images' storage bucket exists in Supabase." }, { status: 500 });
     }
 
     return NextResponse.json({
