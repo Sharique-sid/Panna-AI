@@ -351,7 +351,7 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 
 ## 👨‍💻 About the Developer
 
-This project is developed by **Hasnain** as a modern, AI-powered note-taking solution. Built with love and attention to detail, Panna.ai combines the best of modern web technologies with intelligent AI features to create a seamless note-taking experience.
+This project is developed by **Sharique Hussain** as a modern, AI-powered note-taking solution. Built with love and attention to detail, Panna.ai combines the best of modern web technologies with intelligent AI features to create a seamless note-taking experience.
 
 ### Key Highlights:
 - 🎨 **Beautiful UI/UX**: Clean, minimalist design with dark/light theme support

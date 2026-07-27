@@ -23,8 +23,8 @@ export const metadata: Metadata = {
     "typescript",
     "note app",
   ],
-  authors: [{ name: "Md Taufique Alam" }],
-  creator: "Md Taufique Alam",
+  authors: [{ name: "Sharique Hussain" }],
+  creator: "Sharique Hussain",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
