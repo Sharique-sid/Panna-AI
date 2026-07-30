@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 
+export const dynamic = "force-dynamic";
+
 export default async function Dashboard() {
   try {
     const supabase = await createClient()
